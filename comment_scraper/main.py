@@ -7,10 +7,10 @@ def main():
     source=requests.get(URL).text
     soup=BeautifulSoup(source,'html.parser')
     comments = soup.find_all(string=lambda text: isinstance(text, Comment))
-    print(f"## COMMENTS for [{URL}] ##\n"+"==========="*3)
+    print("====== "+f"COMMENTS for [{URL}]"+" ======")
     for c in comments:
         print("#",c)
         c.extract()
-    print("==========="*3,"\n")
+    print("\n")
 if __name__=="__main__":
     main()
