@@ -10,6 +10,6 @@ def main():
         for email in email_matches:
             print(str(email))
     except Exception as E:
-        print(E)
+        pass
 if __name__=="__main__":
     main()
