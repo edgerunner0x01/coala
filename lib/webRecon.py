@@ -18,7 +18,7 @@ class Target:
             self.status=req.status_code
             self.soup=BeautifulSoup(self.source,'html.parser')
         except Exception as E:
-            print(E)
+            #print(E)
             exit
 
     def HTTP_STATUS(self) ->Tuple[str,int]:
@@ -78,4 +78,3 @@ class Target:
             return False,str(E)
         
 # UPDATE THE HTTPS BUG 
-# CREATE ANOTHER METHOD TO CHECK THE HTTP STATUS OF THE SERVER
