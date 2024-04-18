@@ -18,6 +18,7 @@ class Target:
             self.status=req.status_code
             self.soup=BeautifulSoup(self.source,'html.parser')
         except Exception as E:
+            print(str(E))
             exit
 
     def HTTP_STATUS(self) ->Tuple[str,int]:
