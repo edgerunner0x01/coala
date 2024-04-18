@@ -1,7 +1,5 @@
-from bs4 import BeautifulSoup
-from bs4 import Comment
-import requests ; 
-import sys
+from bs4 import BeautifulSoup , Comment
+import requests 
 import re
 from typing import Union , List , Tuple , Dict
 DEFAULT_HEADERS: Dict[str,str] ={
@@ -15,11 +13,19 @@ class Target:
         self.url = rf'{url}'
         self.headers=headers
         try:
-            self.source=requests.get(self.url,headers=headers).text
+            req=requests.get(self.url,headers=headers)
+            self.source=req.text
+            self.status=req.status_code
             self.soup=BeautifulSoup(self.source,'html.parser')
         except Exception as E:
             print(E)
             exit
+
+    def HTTP_STATUS(self) ->Tuple[str,int]:
+        try:
+            return int(self.status)
+        except Exception as E:
+            return str(E)
 
     def Extract_Comments(self) -> Union[ Tuple[List,bool] , Tuple[str,bool] ]:
         try:
@@ -71,3 +77,5 @@ class Target:
         except Exception as E:
             return False,str(E)
         
+# UPDATE THE HTTPS BUG 
+# CREATE ANOTHER METHOD TO CHECK THE HTTP STATUS OF THE SERVER
