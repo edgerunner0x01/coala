@@ -10,26 +10,21 @@ DEFAULT_HEADERS: Dict[str,str] ={
 
 class Target:
     def __init__(self,url:str,headers: Dict[str,str]=DEFAULT_HEADERS) :
-        self.url = rf'{url}'
+        self.url:str = rf'{url}'
         self.headers=headers
+        self.HTTP_STATUS:None=None
         try:
             req=requests.get(self.url,headers=headers)
-            self.source=req.text
-            self.status=req.status_code
-            self.soup=BeautifulSoup(self.source,'html.parser')
+            self.HTTP_STATUS:int=req.status_code
+            if self.HTTP_STATUS == 200:
+                self.source=req.text
         except Exception as E:
-            print(str(E))
             exit
-
-    def HTTP_STATUS(self) ->Tuple[str,int]:
-        try:
-            return int(self.status)
-        except Exception as E:
-            return str(E)
 
     def Extract_Comments(self) -> Union[ Tuple[List,bool] , Tuple[str,bool] ]:
         try:
-            extracted_comments = self.soup.find_all(string=lambda text: isinstance(text, Comment))
+            soup=BeautifulSoup(self.source,'html.parser')
+            extracted_comments = soup.find_all(string=lambda text: isinstance(text, Comment))
             comments=[]
             for comment in extracted_comments:
                 comments.append(str(comment.extract()))
