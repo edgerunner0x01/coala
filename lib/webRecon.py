@@ -9,7 +9,7 @@ DEFAULT_HEADERS: Dict[str,str] ={
         }
 
 class Target:
-    def __init__(self,url:str,headers: Dict[str,str]=DEFAULT_HEADERS) -> bool:
+    def __init__(self,url:str,headers: Dict[str,str]=DEFAULT_HEADERS) :
         self.url = rf'{url}'
         self.headers=headers
         try:
@@ -18,7 +18,6 @@ class Target:
             self.status=req.status_code
             self.soup=BeautifulSoup(self.source,'html.parser')
         except Exception as E:
-            #print(E)
             exit
 
     def HTTP_STATUS(self) ->Tuple[str,int]:
