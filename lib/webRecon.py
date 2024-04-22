@@ -32,7 +32,7 @@ class Target:
         except Exception as E:   # ALONG WITH THE COMMENTS IF THERE IS ANY OR THE ERROR MSG 
             return False,E
     
-    def Extract_Links(self) -> Union[ Tuple[List,bool] , Tuple[str,bool] ]:
+    def Extract_URLS(self) -> Union[ Tuple[List,bool] , Tuple[str,bool] ]:
         try:
             soup=BeautifulSoup(self.source,'html.parser')
             tags = soup.find_all(['a', 'img', 'script', 'link', 'source'])
