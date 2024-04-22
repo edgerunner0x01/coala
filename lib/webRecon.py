@@ -32,6 +32,23 @@ class Target:
         except Exception as E:   # ALONG WITH THE COMMENTS IF THERE IS ANY OR THE ERROR MSG 
             return False,E
     
+    def Extract_Links(self) -> Union[ Tuple[List,bool] , Tuple[str,bool] ]:
+        try:
+            soup=BeautifulSoup(self.source,'html.parser')
+            tags = soup.find_all(['a', 'img', 'script', 'link', 'source'])
+            # Extract URLs from the tags
+            urls = []
+            for tag in tags:
+                # Extract URLs from 'href' attribute of <a>, <link>, and <source> tags
+                if 'href' in tag.attrs:
+                    urls.append(tag['href'])
+                # Extract URLs from 'src' attribute of <img> and <script> tags
+                if 'src' in tag.attrs:
+                    urls.append(tag['src'])
+            return True,urls # RETURNS TRUE OR FLASE BASED OF THE HTTP STATUS CODE 
+        except Exception as E:   # ALONG WITH THE COMMENTS IF THERE IS ANY OR THE ERROR MSG 
+            return False,E
+    
     def Extract_Emails(self) -> Union[ Tuple[List,bool] , Tuple[str,bool] ] :
         try:
             email_pattern = re.compile(r'([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4})')
@@ -52,7 +69,7 @@ class Target:
             if int(status_code) == 200:
                 return True,int(status_code),str(req.text) # RETURNS TRUE OR FLASE BASED OF THE HTTP STATUS CODE 
             else:                                           # ALONG WITH THE HTTP STATUS CODE 
-                return False,int(status_code),""            # AND THE ROBOTS.TXT CONTENT IF THERE IS ANY
+                return False,int(status_code),""            # AND THE ROBOTS.TXT CONTENT IF THERE IS ANY# RETURNS TRUE OR FLASE BASED OF THE HTTP STATUS CODE # RETURNS TRUE OR FLASE BASED OF THE HTTP STATUS CODE 
         except Exception as E:
             return False,str(E)
 
