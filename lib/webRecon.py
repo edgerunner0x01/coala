@@ -38,6 +38,7 @@ class Target:
             tags = soup.find_all(['a', 'img', 'script', 'link', 'source'])
             # Extract URLs from the tags
             urls = []
+            filtered_urls=[]
             for tag in tags:
                 # Extract URLs from 'href' attribute of <a>, <link>, and <source> tags
                 if 'href' in tag.attrs:
@@ -45,7 +46,10 @@ class Target:
                 # Extract URLs from 'src' attribute of <img> and <script> tags
                 if 'src' in tag.attrs:
                     urls.append(tag['src'])
-            return True,urls # RETURNS TRUE OR FLASE BASED OF THE HTTP STATUS CODE 
+            for url in urls:
+                if url.startswith(('http://', 'https://', 'ftp://')):
+                    filtered_urls.append(url)
+            return True,filtered_urls # RETURNS TRUE OR FLASE BASED OF THE HTTP STATUS CODE 
         except Exception as E:   # ALONG WITH THE COMMENTS IF THERE IS ANY OR THE ERROR MSG 
             return False,E
     
