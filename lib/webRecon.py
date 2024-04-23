@@ -92,5 +92,39 @@ class Target:
                 return False,int(status_code),""
         except Exception as E:
             return False,str(E)
-        
+
+    def Extract_WPLOGIN(self)  -> Union[ Tuple[str,int,bool] , Tuple[str,bool ] ]: 
+
+        def extract_form_params(html_content):
+            form_params = {}
+            soup = BeautifulSoup(html_content, 'html.parser')
+            forms = soup.find_all('form')
+            
+            for form in forms:
+                form_name = form.get('name') or form.get('id')
+                if form_name:
+                    form_params[form_name] = {}
+                    inputs = form.find_all('input')
+                    for inp in inputs:
+                        name = inp.get('name')
+                        value = inp.get('value')
+                        if name:
+                            form_params[form_name][name] = value
+            return form_params
+
+        def filter(url:str) -> str:
+            if url[len(url)-1] == "/":
+                return url[:len(url)-1]
+            else:
+                return url
+        try:
+            req=requests.get(f"{filter(self.url)}/wp-login.php",headers=self.headers)
+            status_code=req.status_code
+            if int(status_code) == 200:
+                return True,int(status_code),str(extract_form_params(req.text))
+            else:
+                return False,int(status_code),""
+        except Exception as E:
+            return False,str(E)
+
 # UPDATE THE HTTPS BUG 
