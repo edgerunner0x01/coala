@@ -93,7 +93,7 @@ class Target:
         except Exception as E:
             return False,str(E)
 
-    def Extract_WPLOGIN(self)  -> Union[ Tuple[str,int,bool] , Tuple[str,bool ] ]: 
+    def Extract_WPLOGIN(self)  -> Union[ Tuple[Dict[str,str],int,bool] , Tuple[str,bool ] ]: 
 
         def extract_form_params(html_content):
             form_params = {}
@@ -121,7 +121,7 @@ class Target:
             req=requests.get(f"{filter(self.url)}/wp-login.php",headers=self.headers)
             status_code=req.status_code
             if int(status_code) == 200:
-                return True,int(status_code),str(extract_form_params(req.text))
+                return True,int(status_code),extract_form_params(req.text)
             else:
                 return False,int(status_code),""
         except Exception as E:
