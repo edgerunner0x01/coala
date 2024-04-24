@@ -9,6 +9,7 @@ DEFAULT_HEADERS: Dict[str,str] ={
         }
 
 class Target:
+    DEFAULT_HEADERS=DEFAULT_HEADERS
     def __init__(self,url:str,headers: Dict[str,str]=DEFAULT_HEADERS) :
         self.url:str = rf'{url}'
         self.headers=headers
