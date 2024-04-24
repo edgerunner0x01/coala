@@ -32,6 +32,15 @@ class Target:
             return True,comments # RETURNS TRUE OR FLASE BASED OF THE HTTP STATUS CODE 
         except Exception as E:   # ALONG WITH THE COMMENTS IF THERE IS ANY OR THE ERROR MSG 
             return False,E
+
+    def Extract_MetaData(self) -> Union[ Tuple[List,bool] , Tuple[str,bool] ]:
+        try:
+            soup=BeautifulSoup(self.source,'html.parser')
+            extracted_metadata = soup.find_all('meta')
+            metadata=extracted_metadata
+            return True,metadata # RETURNS TRUE OR FLASE BASED OF THE HTTP STATUS CODE 
+        except Exception as E:   # ALONG WITH THE COMMENTS IF THERE IS ANY OR THE ERROR MSG 
+            return False,E
     
     def Extract_URLS(self) -> Union[ Tuple[List,bool] , Tuple[str,bool] ]:
         try:
