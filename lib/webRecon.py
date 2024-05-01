@@ -107,7 +107,7 @@ class Target:
 
     def Extract_XML_URLS(self)  -> Union[ Tuple[List,int,bool] , Tuple[str,bool ] ]: 
         try:
-            req=requests.get(f"{filter(self.url)}",headers=self.headers)
+            req=requests.get(f"{self.url}",headers=self.headers)
             status_code=req.status_code
             if int(status_code) == 200:
                 urls=[url.text for url in ET.fromstring(req.text).findall('.//{http://www.sitemaps.org/schemas/sitemap/0.9}loc')]
