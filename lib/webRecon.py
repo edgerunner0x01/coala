@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup , Comment
 import requests 
 import re
 from typing import Union , List , Tuple , Dict
+import xml.etree.ElementTree as ET
 DEFAULT_HEADERS: Dict[str,str] ={
         "Accept": "xml,*/*" ,
          "Accept-Language":"en-US,en",
@@ -87,7 +88,7 @@ class Target:
         except Exception as E:
             return False,str(E)
 
-    def Extract_Sitemap(self)  -> Union[ Tuple[str,int,bool] , Tuple[str,bool ] ]: 
+    def Extract_Sitemap(self)  -> Union[ Tuple[List,int,bool] , Tuple[str,bool ] ]: 
         def filter(url:str) -> str:
             if url[len(url)-1] == "/":
                 return url[:len(url)-1]
@@ -97,7 +98,20 @@ class Target:
             req=requests.get(f"{filter(self.url)}/sitemap.xml",headers=self.headers)
             status_code=req.status_code
             if int(status_code) == 200:
-                return True,int(status_code),str(req.text)
+                urls=[url.text for url in ET.fromstring(req.text).findall('.//{http://www.sitemaps.org/schemas/sitemap/0.9}loc')]
+                return True,int(status_code),urls      
+            else:
+                return False,int(status_code),""
+        except Exception as E:
+            return False,str(E)
+
+    def Extract_XML_URLS(self)  -> Union[ Tuple[List,int,bool] , Tuple[str,bool ] ]: 
+        try:
+            req=requests.get(f"{filter(self.url)}",headers=self.headers)
+            status_code=req.status_code
+            if int(status_code) == 200:
+                urls=[url.text for url in ET.fromstring(req.text).findall('.//{http://www.sitemaps.org/schemas/sitemap/0.9}loc')]
+                return True,int(status_code),urls      
             else:
                 return False,int(status_code),""
         except Exception as E:
