@@ -1,8 +1,10 @@
 from bs4 import BeautifulSoup , Comment
 import requests 
 import re
+import urllib3  
 from typing import Union , List , Tuple , Dict
 import xml.etree.ElementTree as ET
+urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
 DEFAULT_HEADERS: Dict[str,str] ={
         "Accept": "xml,*/*" ,
          "Accept-Language":"en-US,en",
@@ -16,7 +18,7 @@ class Target:
         self.headers=headers
         self.HTTP_STATUS:None=None
         try:
-            req=requests.get(self.url,headers=headers)
+            req=requests.get(self.url,headers=headers,verify=False)
             self.HTTP_STATUS:int=req.status_code
             if self.HTTP_STATUS == 200:
                 self.source=req.text
@@ -79,7 +81,7 @@ class Target:
             else:
                 return url
         try:
-            req=requests.get(f"{filter(self.url)}/robots.txt",headers=self.headers)
+            req=requests.get(f"{filter(self.url)}/robots.txt",headers=self.headers,verify=False)
             status_code=req.status_code
             if int(status_code) == 200:
                 return True,int(status_code),str(req.text) # RETURNS TRUE OR FLASE BASED OF THE HTTP STATUS CODE 
@@ -95,7 +97,7 @@ class Target:
             else:
                 return url
         try:
-            req=requests.get(f"{filter(self.url)}/sitemap.xml",headers=self.headers)
+            req=requests.get(f"{filter(self.url)}/sitemap.xml",headers=self.headers,verify=False)
             status_code=req.status_code
             if int(status_code) == 200:
                 urls=[url.text for url in ET.fromstring(req.text).findall('.//{http://www.sitemaps.org/schemas/sitemap/0.9}loc')]
@@ -107,7 +109,7 @@ class Target:
 
     def Extract_XML_URLS(self)  -> Union[ Tuple[List,int,bool] , Tuple[str,bool ] ]: 
         try:
-            req=requests.get(f"{self.url}",headers=self.headers)
+            req=requests.get(f"{self.url}",headers=self.headers,verify=False)
             status_code=req.status_code
             if int(status_code) == 200:
                 urls=[url.text for url in ET.fromstring(req.text).findall('.//{http://www.sitemaps.org/schemas/sitemap/0.9}loc')]
@@ -142,7 +144,7 @@ class Target:
             else:
                 return url
         try:
-            req=requests.get(f"{filter(self.url)}/wp-login.php",headers=self.headers)
+            req=requests.get(f"{filter(self.url)}/wp-login.php",headers=self.headers,verify=False)
             status_code=req.status_code
             if int(status_code) == 200:
                 return True,int(status_code),extract_form_params(req.text)
