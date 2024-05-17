@@ -1,126 +1,137 @@
-from bs4 import BeautifulSoup , Comment
-import requests 
+from bs4 import BeautifulSoup, Comment
+import requests
 import re
-import urllib3  
-from typing import Union , List , Tuple , Dict
+import urllib3
+from typing import Union, List, Tuple, Dict
 import xml.etree.ElementTree as ET
+import logging
+
 urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
-DEFAULT_HEADERS: Dict[str,str] ={
-        "Accept": "xml,*/*" ,
-         "Accept-Language":"en-US,en",
-         "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
-        }
+
+DEFAULT_HEADERS: Dict[str, str] = {
+    "Accept": "xml,*/*",
+    "Accept-Language": "en-US,en",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
+}
+
+# Configure the logging
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    handlers=[
+                        logging.FileHandler("target.log"),
+                        logging.StreamHandler()
+                    ])
+logger = logging.getLogger(__name__)
 
 class Target:
-    DEFAULT_HEADERS=DEFAULT_HEADERS
-    def __init__(self,url:str,headers: Dict[str,str]=DEFAULT_HEADERS) :
-        self.url:str = rf'{url}'
-        self.headers=headers
-        self.HTTP_STATUS:None=None
+    def __init__(self, url: str, headers: Dict[str, str] = DEFAULT_HEADERS):
+        self.url = url
+        self.headers = headers
+        self.source = None
+        self.HTTP_STATUS = None
         try:
-            req=requests.get(self.url,headers=headers,verify=False)
-            self.HTTP_STATUS:int=req.status_code
+            req = requests.get(self.url, headers=headers, verify=False)
+            self.HTTP_STATUS = req.status_code
             if self.HTTP_STATUS == 200:
-                self.source=req.text
+                self.source = req.text
+            else:
+                logger.error(f"Failed to retrieve URL {self.url}. Status code: {self.HTTP_STATUS}")
         except Exception as E:
-            exit
+            logger.error(f"Exception occurred while fetching URL {self.url}: {E}")
 
-    def Extract_Comments(self) -> Union[ Tuple[List,bool] , Tuple[str,bool] ]:
+    def Extract_Comments(self) -> Union[Tuple[List[str], bool], Tuple[str, bool]]:
+        if self.HTTP_STATUS != 200:
+            return "HTTP Status not 200", False
         try:
-            soup=BeautifulSoup(self.source,'html.parser')
-            extracted_comments = soup.find_all(string=lambda text: isinstance(text, Comment))
-            comments=[]
-            for comment in extracted_comments:
-                comments.append(str(comment.extract()))
-            return True,comments # RETURNS TRUE OR FLASE BASED OF THE HTTP STATUS CODE 
-        except Exception as E:   # ALONG WITH THE COMMENTS IF THERE IS ANY OR THE ERROR MSG 
-            return False,E
+            soup = BeautifulSoup(self.source, 'html.parser')
+            comments = [str(comment.extract()) for comment in soup.find_all(string=lambda text: isinstance(text, Comment))]
+            return comments, True
+        except Exception as E:
+            logger.error(f"Exception occurred while extracting comments: {E}")
+            return str(E), False
 
-    def Extract_MetaData(self) -> Union[ Tuple[List,bool] , Tuple[str,bool] ]:
+    def Extract_MetaData(self) -> Union[Tuple[List[Dict[str, str]], bool], Tuple[str, bool]]:
+        if self.HTTP_STATUS != 200:
+            return "HTTP Status not 200", False
         try:
-            soup=BeautifulSoup(self.source,'html.parser')
-            extracted_metadata = soup.find_all('meta')
-            metadata=extracted_metadata
-            return True,metadata # RETURNS TRUE OR FLASE BASED OF THE HTTP STATUS CODE 
-        except Exception as E:   # ALONG WITH THE COMMENTS IF THERE IS ANY OR THE ERROR MSG 
-            return False,E
-    
-    def Extract_URLS(self) -> Union[ Tuple[List,bool] , Tuple[str,bool] ]:
+            soup = BeautifulSoup(self.source, 'html.parser')
+            metadata = [{'name': tag.get('name', ''), 'content': tag.get('content', '')} for tag in soup.find_all('meta')]
+            return metadata, True
+        except Exception as E:
+            logger.error(f"Exception occurred while extracting metadata: {E}")
+            return str(E), False
+
+    def Extract_URLS(self) -> Union[Tuple[List[str], bool], Tuple[str, bool]]:
+        if self.HTTP_STATUS != 200:
+            return "HTTP Status not 200", False
         try:
-            soup=BeautifulSoup(self.source,'html.parser')
-            tags = soup.find_all(['a', 'img', 'script', 'link', 'source'])
-            # Extract URLs from the tags
-            urls = []
-            filtered_urls=[]
-            for tag in tags:
-                # Extract URLs from 'href' attribute of <a>, <link>, and <source> tags
-                if 'href' in tag.attrs:
-                    urls.append(tag['href'])
-                # Extract URLs from 'src' attribute of <img> and <script> tags
-                if 'src' in tag.attrs:
-                    urls.append(tag['src'])
-            for url in urls:
-                if url.startswith(('http://', 'https://', 'ftp://')):
-                    filtered_urls.append(url)
-            return True,filtered_urls # RETURNS TRUE OR FLASE BASED OF THE HTTP STATUS CODE 
-        except Exception as E:   # ALONG WITH THE COMMENTS IF THERE IS ANY OR THE ERROR MSG 
-            return False,E
-    
-    def Extract_Emails(self) -> Union[ Tuple[List,bool] , Tuple[str,bool] ] :
+            soup = BeautifulSoup(self.source, 'html.parser')
+            urls = [tag.get('href') or tag.get('src') for tag in soup.find_all(['a', 'img', 'script', 'link', 'source'])]
+            filtered_urls = [url for url in urls if url and url.startswith(('http://', 'https://', 'ftp://'))]
+            return filtered_urls, True
+        except Exception as E:
+            logger.error(f"Exception occurred while extracting URLs: {E}")
+            return str(E), False
+
+    def Extract_Emails(self) -> Union[Tuple[List[str], bool], Tuple[str, bool]]:
+        if self.HTTP_STATUS != 200:
+            return "HTTP Status not 200", False
         try:
             email_pattern = re.compile(r'([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4})')
             email_matches = re.findall(email_pattern, self.source)
-            return True,email_matches  # RETURNS TRUE OR FLASE BASED OF THE HTTP STATUS CODE 
-        except Exception as E:         # ALONG WITH THE EMAILS IF THERE IS ANY OR THE ERROR MSG 
-            return False,E
-
-    def Extract_Robots(self)  -> Union[ Tuple[str,int,bool] , Tuple[str,bool ] ]: 
-        def filter(url:str) -> str:
-            if url[len(url)-1] == "/":
-                return url[:len(url)-1]
-            else:
-                return url
-        try:
-            req=requests.get(f"{filter(self.url)}/robots.txt",headers=self.headers,verify=False)
-            status_code=req.status_code
-            if int(status_code) == 200:
-                return True,int(status_code),str(req.text) # RETURNS TRUE OR FLASE BASED OF THE HTTP STATUS CODE 
-            else:                                           # ALONG WITH THE HTTP STATUS CODE 
-                return False,int(status_code),""            # AND THE ROBOTS.TXT CONTENT IF THERE IS ANY# RETURNS TRUE OR FLASE BASED OF THE HTTP STATUS CODE # RETURNS TRUE OR FLASE BASED OF THE HTTP STATUS CODE 
+            return email_matches, True
         except Exception as E:
-            return False,str(E)
+            logger.error(f"Exception occurred while extracting emails: {E}")
+            return str(E), False
 
-    def Extract_Sitemap(self)  -> Union[ Tuple[List,int,bool] , Tuple[str,bool ] ]: 
-        def filter(url:str) -> str:
-            if url[len(url)-1] == "/":
-                return url[:len(url)-1]
-            else:
-                return url
+    def Extract_Robots(self) -> Union[Tuple[str, int, bool], Tuple[str, bool]]:
+        def filter_url(url: str) -> str:
+            return url.rstrip('/')
+
         try:
-            req=requests.get(f"{filter(self.url)}/sitemap.xml",headers=self.headers,verify=False)
-            status_code=req.status_code
-            if int(status_code) == 200:
-                urls=[url.text for url in ET.fromstring(req.text).findall('.//{http://www.sitemaps.org/schemas/sitemap/0.9}loc')]
-                return True,int(status_code),urls      
+            req = requests.get(f"{filter_url(self.url)}/robots.txt", headers=self.headers, verify=False)
+            status_code = req.status_code
+            if status_code == 200:
+                return req.text, status_code, True
             else:
-                return False,int(status_code),""
+                logger.error(f"Failed to retrieve robots.txt from {self.url}. Status code: {status_code}")
+                return "", status_code, False
         except Exception as E:
-            return False,str(E)
+            logger.error(f"Exception occurred while fetching robots.txt: {E}")
+            return str(E), False
 
-    def Extract_XML_URLS(self)  -> Union[ Tuple[List,int,bool] , Tuple[str,bool ] ]: 
+    def Extract_Sitemap(self) -> Union[Tuple[List[str], int, bool], Tuple[str, bool]]:
+        def filter_url(url: str) -> str:
+            return url.rstrip('/')
+
         try:
-            req=requests.get(f"{self.url}",headers=self.headers,verify=False)
-            status_code=req.status_code
-            if int(status_code) == 200:
-                urls=[url.text for url in ET.fromstring(req.text).findall('.//{http://www.sitemaps.org/schemas/sitemap/0.9}loc')]
-                return True,int(status_code),urls      
+            req = requests.get(f"{filter_url(self.url)}/sitemap.xml", headers=self.headers, verify=False)
+            status_code = req.status_code
+            if status_code == 200:
+                urls = [url.text for url in ET.fromstring(req.text).findall('.//{http://www.sitemaps.org/schemas/sitemap/0.9}loc')]
+                return urls, status_code, True
             else:
-                return False,int(status_code),""
+                logger.error(f"Failed to retrieve sitemap.xml from {self.url}. Status code: {status_code}")
+                return [], status_code, False
         except Exception as E:
-            return False,str(E)
+            logger.error(f"Exception occurred while fetching sitemap.xml: {E}")
+            return str(E), False
 
-    def Extract_WPLOGIN(self)  -> Union[ Tuple[Dict[str,str],int,bool] , Tuple[str,bool ] ]: 
+    def Extract_XML_URLS(self) -> Union[Tuple[List[str], int, bool], Tuple[str, bool]]:
+        try:
+            req = requests.get(self.url, headers=self.headers, verify=False)
+            status_code = req.status_code
+            if status_code == 200:
+                urls = [url.text for url in ET.fromstring(req.text).findall('.//{http://www.sitemaps.org/schemas/sitemap/0.9}loc')]
+                return urls, status_code, True
+            else:
+                logger.error(f"Failed to retrieve XML content from {self.url}. Status code: {status_code}")
+                return [], status_code, False
+        except Exception as E:
+            logger.error(f"Exception occurred while fetching XML content: {E}")
+            return str(E), False
 
+    def Extract_WPLOGIN(self) -> Union[Tuple[Dict[str, Dict[str, str]], int, bool], Tuple[str, bool]]:
         def extract_form_params(html_content):
             form_params = {}
             soup = BeautifulSoup(html_content, 'html.parser')
@@ -138,18 +149,18 @@ class Target:
                             form_params[form_name][name] = value
             return form_params
 
-        def filter(url:str) -> str:
-            if url[len(url)-1] == "/":
-                return url[:len(url)-1]
-            else:
-                return url
-        try:
-            req=requests.get(f"{filter(self.url)}/wp-login.php",headers=self.headers,verify=False)
-            status_code=req.status_code
-            if int(status_code) == 200:
-                return True,int(status_code),extract_form_params(req.text)
-            else:
-                return False,int(status_code),""
-        except Exception as E:
-            return False,str(E)
+        def filter_url(url: str) -> str:
+            return url.rstrip('/')
 
+        try:
+            req = requests.get(f"{filter_url(self.url)}/wp-login.php", headers=self.headers, verify=False)
+            status_code = req.status_code
+            if status_code == 200:
+                form_params = extract_form_params(req.text)
+                return form_params, status_code, True
+            else:
+                logger.error(f"Failed to retrieve wp-login.php from {self.url}. Status code: {status_code}")
+                return {}, status_code, False
+        except Exception as E:
+            logger.error(f"Exception occurred while fetching wp-login.php: {E}")
+            return str(E), False
