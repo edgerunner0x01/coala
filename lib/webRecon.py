@@ -153,4 +153,3 @@ class Target:
         except Exception as E:
             return False,str(E)
 
-# UPDATE THE HTTPS BUG 
