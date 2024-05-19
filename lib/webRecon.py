@@ -13,28 +13,51 @@ import urllib3
 from typing import Union, List, Tuple, Dict
 import xml.etree.ElementTree as ET
 import logging
+import json
+from random import randint 
 
 urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
+
+USER_AGENTS_PATH:str="./Require/User-Agents.json"
+UserAgents:List[str]=json.load(open(USER_AGENTS_PATH,"r"))
 
 DEFAULT_HEADERS: Dict[str, str] = {
     "Accept": "xml,*/*",
     "Accept-Language": "en-US,en",
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
+    "User-Agent": str(UserAgents[randint(0,len(UserAgents)-1)])
 }
 
 # Configure the logging
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    handlers=[
-                        logging.FileHandler("target.log"),
-                        logging.StreamHandler()
-                    ])
-logger = logging.getLogger(__name__)
+class Log:
+    LOG_LEVELS = {
+        "DEBUG": logging.DEBUG,
+        "INFO": logging.INFO,
+        "WARNING": logging.WARNING,
+        "ERROR": logging.ERROR,
+        "CRITICAL": logging.CRITICAL
+    }
+
+    def __init__(self, log_method: str = "DEBUG"):
+        self.logger = logging.getLogger(__name__)
+        self.configure_logging(log_method)
+
+    def configure_logging(self, log_method: str):
+        try:
+            log_level = self.LOG_LEVELS.get(log_method, logging.DEBUG)
+            logging.basicConfig(level=log_level,
+                                format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                                handlers=[
+                                    logging.FileHandler("target.log"),
+                                    logging.StreamHandler()
+                                ])
+        except Exception as e:
+            self.logger.error("Error setting up logging: %s", e)
 
 class Target:
     def __init__(self, url: str, headers: Dict[str, str] = DEFAULT_HEADERS):
         self.url = url
         self.headers = headers
+        self.headers["User-Agent"]=str(UserAgents[randint(0,len(UserAgents)-1)])
         self.source = None
         self.HTTP_STATUS = None
         try:
