@@ -1,9 +1,7 @@
-#!/usr/bin/python3
-
 #########################################################
-#   webRecon - Scrape And Extract Data From The Web     #
+#   zProbe - Scrape And Extract Data From The Web       #
 # 			  Author   - edgerunner0x01                 #
-# 		https://www.github.com/edgerunner0x01			#
+# 		https://www.github.com/edgerunner0x01           #
 #########################################################
 
 from bs4 import BeautifulSoup, Comment
@@ -18,7 +16,7 @@ from random import randint
 
 urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
 
-USER_AGENTS_PATH:str="./Require/User-Agents.json"
+USER_AGENTS_PATH:str="../Require/User-Agents.json"
 UserAgents:List[str]=json.load(open(USER_AGENTS_PATH,"r"))
 
 DEFAULT_HEADERS: Dict[str, str] = {
@@ -54,14 +52,14 @@ class Log:
             self.logger.error("Error setting up logging: %s", e)
 
 class Target:
-    def __init__(self, url: str, headers: Dict[str, str] = DEFAULT_HEADERS):
+    def __init__(self, url: str, headers: Dict[str, str] = DEFAULT_HEADERS, proxies : Dict[str, str] = None):
         self.url = url
         self.headers = headers
         self.headers["User-Agent"]=str(UserAgents[randint(0,len(UserAgents)-1)])
         self.source = None
         self.HTTP_STATUS = None
         try:
-            req = requests.get(self.url, headers=headers, verify=False)
+            req = requests.get(self.url, headers=headers, proxies=self.proxies ,verify=False)
             self.HTTP_STATUS = req.status_code
             if self.HTTP_STATUS == 200:
                 self.source = req.text
@@ -120,7 +118,7 @@ class Target:
             return url.rstrip('/')
 
         try:
-            req = requests.get(f"{filter_url(self.url)}/robots.txt", headers=self.headers, verify=False)
+            req = requests.get(f"{filter_url(self.url)}/robots.txt", headers=self.headers, proxies=self.proxies ,verify=False)
             status_code = req.status_code
             if status_code == 200:
                 return req.text, status_code, True
@@ -136,7 +134,7 @@ class Target:
             return url.rstrip('/')
 
         try:
-            req = requests.get(f"{filter_url(self.url)}/sitemap.xml", headers=self.headers, verify=False)
+            req = requests.get(f"{filter_url(self.url)}/sitemap.xml", headers=self.headers, proxies=self.proxies ,verify=False)
             status_code = req.status_code
             if status_code == 200:
                 urls = [url.text for url in ET.fromstring(req.text).findall('.//{http://www.sitemaps.org/schemas/sitemap/0.9}loc')]
@@ -150,7 +148,7 @@ class Target:
 
     def Extract_XML_URLS(self) -> Union[Tuple[List[str], int, bool], Tuple[str, bool]]:
         try:
-            req = requests.get(self.url, headers=self.headers, verify=False)
+            req = requests.get(self.url, headers=self.headers, proxies=self.proxies ,verify=False)
             status_code = req.status_code
             if status_code == 200:
                 urls = [url.text for url in ET.fromstring(req.text).findall('.//{http://www.sitemaps.org/schemas/sitemap/0.9}loc')]
@@ -184,7 +182,7 @@ class Target:
             return url.rstrip('/')
 
         try:
-            req = requests.get(f"{filter_url(self.url)}/wp-login.php", headers=self.headers, verify=False)
+            req = requests.get(f"{filter_url(self.url)}/wp-login.php", headers=self.headers, proxies=self.proxies ,verify=False)
             status_code = req.status_code
             if status_code == 200:
                 form_params = extract_form_params(req.text)
