@@ -13,10 +13,11 @@ import xml.etree.ElementTree as ET
 import logging
 import json
 from random import randint 
+import os
 
 urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
 
-USER_AGENTS_PATH:str="../Require/User-Agents.json"
+USER_AGENTS_PATH:str=str(os.path.dirname(__file__))+"/../Require/User-Agents.json"
 UserAgents:List[str]=json.load(open(USER_AGENTS_PATH,"r"))
 
 DEFAULT_HEADERS: Dict[str, str] = {
