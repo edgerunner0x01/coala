@@ -52,7 +52,7 @@ class Log:
             self.logger.error("Error setting up logging: %s", e)
 
 class Target:
-    def __init__(self, url: str, proxies : Dict[str, str] ,headers: Dict[str, str] = DEFAULT_HEADERS):
+    def __init__(self, url: str, proxies : Dict[str, str]=None ,headers: Dict[str, str] = DEFAULT_HEADERS):
         self.url = url
         self.headers = headers
         self.headers["User-Agent"]=str(UserAgents[randint(0,len(UserAgents)-1)])
