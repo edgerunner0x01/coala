@@ -52,12 +52,13 @@ class Log:
             self.logger.error("Error setting up logging: %s", e)
 
 class Target:
-    def __init__(self, url: str, headers: Dict[str, str] = DEFAULT_HEADERS, proxies : Dict[str, str] = None):
+    def __init__(self, url: str, proxies : Dict[str, str] ,headers: Dict[str, str] = DEFAULT_HEADERS):
         self.url = url
         self.headers = headers
         self.headers["User-Agent"]=str(UserAgents[randint(0,len(UserAgents)-1)])
         self.source = None
         self.HTTP_STATUS = None
+        self.proxies=proxies
         try:
             req = requests.get(self.url, headers=headers, proxies=self.proxies ,verify=False)
             self.HTTP_STATUS = req.status_code
