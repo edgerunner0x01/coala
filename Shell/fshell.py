@@ -121,11 +121,9 @@ Options:
 {Fore.CYAN}[M] Menu{Fore.RESET}
 {Fore.CYAN}[C] Clear{Fore.RESET}
 {Fore.CYAN}[0] Help{Fore.RESET}
-{Fore.CYAN}[99] Exit{Fore.RESET}
-
-{Style.RESET_ALL}
+{Fore.CYAN}[99] Exit{Fore.RESET}{Style.RESET_ALL}
 """
-        self.prompt = f"{Fore.LIGHTMAGENTA_EX}> {Style.RESET_ALL}"
+        self.prompt = f"{Fore.LIGHTMAGENTA_EX}Spectre > {Style.RESET_ALL}"
 
     def Run(self):
         """Runs the shell, handling user input and directing to appropriate functions."""
@@ -196,9 +194,7 @@ Options:
 {Fore.CYAN}[M] Menu{Fore.RESET}
 {Fore.CYAN}[C] Clear{Fore.RESET}
 {Fore.CYAN}[0] Help{Fore.RESET}
-{Fore.CYAN}[99] Exit{Fore.RESET}
-
-{Style.RESET_ALL}
+{Fore.CYAN}[99] Exit{Fore.RESET}{Style.RESET_ALL}
 """
                 logging.info(f"Target set to: {self.target}")
             else:
