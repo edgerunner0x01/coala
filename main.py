@@ -8,6 +8,7 @@ fshell.Shell.logger = fshell.Log(log_method="INFO").logger
 def main():
 
     shell=fshell.Shell()
+    shell.Banner()
     shell.Menu()
     shell.Run()
     

@@ -2,8 +2,13 @@ import validators
 import logging
 import sys
 import os
+from random import randint
+from colorama import init, Fore, Back, Style
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'module_to_import')))
 from zProbe.Lib.zProbe import *
+
+# Initialize colorama
+init(autoreset=True)
 
 # Configure logging
 class Log:
@@ -34,79 +39,90 @@ class Log:
 class Shell:
     """A command-line interface shell for performing various extraction tasks on a target URL."""
 
-    Commands = [str(i) for i in range(9)] + ["S", "M", "99",""]
+    Commands = [str(i) for i in range(9)] + ["S", "M", "C", "99", ""]
 
     def __init__(self):
         """Initializes the Shell with default values and messages."""
-        self.help_message = """
+        self.banners = [f"""{Fore.MAGENTA}
+ _______                    __
+|     __|.-----.-----.----.|  |_.----.-----.
+|__     ||  _  |  -__|  __||   _|   _|  -__|
+|_______||   __|_____|____||____|__| |_____|
+         |__|                                   
+                    - https://github.com/edgerunner0x01 -{Style.RESET_ALL}"""]
+
+        self.help_message = f"""{Fore.MAGENTA}
 Options:
-  [1] Extract HTML Comments
+  {Fore.LIGHTMAGENTA_EX}[1] Extract HTML Comments{Fore.RESET}
       Extracts all HTML comments from the target web page. 
       HTML comments are enclosed within <!-- and -->.
 
-  [2] Extract Meta Tags
+  {Fore.LIGHTMAGENTA_EX}[2] Extract Meta Tags{Fore.RESET}
       Extracts metadata from the target web page.
       This includes tags like <meta name="description" content="...">.
 
-  [3] Extract URLs (Links, Images, Scripts)
+  {Fore.LIGHTMAGENTA_EX}[3] Extract URLs (Links, Images, Scripts){Fore.RESET}
       Extracts all URLs from the target web page, including:
       - Hyperlinks (<a href="...">)
       - Image sources (<img src="...">)
       - Script sources (<script src="...">)
 
-  [4] Extract Email Addresses
+  {Fore.LIGHTMAGENTA_EX}[4] Extract Email Addresses{Fore.RESET}
       Extracts email addresses from the target web page. 
       It searches for patterns that resemble email addresses (e.g., user@example.com).
 
-  [5] Extract Robots.txt Content
+  {Fore.LIGHTMAGENTA_EX}[5] Extract Robots.txt Content{Fore.RESET}
       Retrieves and displays the content of the robots.txt file from the target website.
       This file often contains rules for web crawlers about which parts of the site to avoid.
 
-  [6] Extract URLs from Sitemap.xml
+  {Fore.LIGHTMAGENTA_EX}[6] Extract URLs from Sitemap.xml{Fore.RESET}
       Extracts all URLs listed in the sitemap.xml file from the target website.
       Sitemaps typically help search engines to better index a site.
 
-  [7] Extract URLs from XML (Sitemap Schema)
+  {Fore.LIGHTMAGENTA_EX}[7] Extract URLs from XML (Sitemap Schema){Fore.RESET}
       Parses any XML content conforming to the sitemap schema to extract URLs.
       Useful for custom sitemap formats or other structured XML data.
 
-  [8] Extract WordPress Login Form Params
+  {Fore.LIGHTMAGENTA_EX}[8] Extract WordPress Login Form Params{Fore.RESET}
       Extracts the form parameters required to log in to a WordPress site.
       This includes fields like username and password input names.
 
-  [S] Set target (URL)
+  {Fore.LIGHTMAGENTA_EX}[S] Set target (URL){Fore.RESET}
       Sets the target URL for subsequent extraction operations.
       Example: "S" followed by "https://example.com".
 
-  [M] Menu
+  {Fore.LIGHTMAGENTA_EX}[M] Menu{Fore.RESET}
       Displays the main menu with options to choose from.
 
-  [0] Help
+  {Fore.LIGHTMAGENTA_EX}[0] Help{Fore.RESET}
       Displays this help text, providing details about each option and how to use them.
 
-  [99] Exit
+  {Fore.LIGHTMAGENTA_EX}[99] Exit{Fore.RESET}
       Exits the program.
+{Style.RESET_ALL}
 """
-        self.menu = """
-Select an option:
+        self.menu = f"""{Fore.MAGENTA}
+# Select an option:
 
-[1] Extract HTML Comments
-[2] Extract Meta Tags
-[3] Extract URLs (Links, Images, Scripts)
-[4] Extract Email Addresses
-[5] Extract Robots.txt Content
-[6] Extract URLs from Sitemap.xml
-[7] Extract URLs from XML (Sitemap Schema)
-[8] Extract WordPress Login Form Params
+{Fore.LIGHTMAGENTA_EX}[1] Extract HTML Comments{Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[2] Extract Meta Tags{Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[3] Extract URLs (Links, Images, Scripts){Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[4] Extract Email Addresses{Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[5] Extract Robots.txt Content{Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[6] Extract URLs from Sitemap.xml{Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[7] Extract URLs from XML (Sitemap Schema){Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[8] Extract WordPress Login Form Params{Fore.RESET}
 
-[S] Set target (URL)
-[M] Menu
-[0] Help
-[99] Exit
+{Fore.CYAN}[S] Set target (URL){Fore.RESET}
+{Fore.CYAN}[M] Menu{Fore.RESET}
+{Fore.CYAN}[C] Clear{Fore.RESET}
+{Fore.CYAN}[0] Help{Fore.RESET}
+{Fore.CYAN}[99] Exit{Fore.RESET}
 
+{Style.RESET_ALL}
 """
         self.target = None
-        self.prompt = "> "
+        self.prompt = f"{Fore.LIGHTMAGENTA_EX}> {Style.RESET_ALL}"
 
     def Run(self):
         """Runs the shell, handling user input and directing to appropriate functions."""
@@ -117,10 +133,10 @@ Select an option:
                 if execute in Shell.Commands:
                     self.execute_command(execute)
                 else:
-                    print("Invalid option! Please try again.")
+                    print(f"{Fore.RED}Invalid option! Please try again.{Style.RESET_ALL}")
             except Exception as e:
                 logging.error(f"An error occurred: {e}")
-                print(f"An unexpected error occurred: {e}")
+                print(f"{Fore.RED}An unexpected error occurred: {e}{Style.RESET_ALL}")
 
     def execute_command(self, command):
         """Executes the command based on user input."""
@@ -142,6 +158,8 @@ Select an option:
             self.extract_wp_login_form_params()
         elif command == "S":
             self.set_target()
+        elif command == "C":
+            self.Clear()
         elif command == "M":
             self.Menu()
         elif command == "0":
@@ -152,16 +170,16 @@ Select an option:
     def set_target(self):
         """Sets the target URL for extraction."""
         try:
-            target = input("[*] Set Target (URL): ").strip()
+            target = input(f"{Fore.CYAN}[*] Set Target (URL): {Style.RESET_ALL}").strip()
             if validators.url(target):
                 self.target = target
-                print(f"[+] Target is set to '{self.target}' successfully.")
+                print(f"{Fore.GREEN}[+] Target is set to '{self.target}' successfully.{Style.RESET_ALL}")
                 logging.info(f"Target set to: {self.target}")
             else:
-                print("[!] Invalid URL. Please try again.")
+                print(f"{Fore.RED}[!] Invalid URL. Please try again.{Style.RESET_ALL}")
         except Exception as e:
             logging.error(f"Failed to set target: {e}")
-            print(f"An error occurred while setting the target: {e}")
+            print(f"{Fore.RED}An error occurred while setting the target: {e}{Style.RESET_ALL}")
 
     def Menu(self):
         """Displays the menu options."""
@@ -171,17 +189,26 @@ Select an option:
         """Displays the help message."""
         print(self.help_message)
 
+    def Banner(self):
+        print(self.banners[randint(0, len(self.banners) - 1)])
+
     def exit_shell(self):
-        self.logger.info("Exiting the shell.")
-        print("Exiting the program.")
+        logging.info("Exiting the shell.")
+        print(f"{Fore.GREEN}Exiting the program.{Style.RESET_ALL}")
         exit()
+
+    def Clear(self):
+        try:
+            os.system('cls' if os.name == 'nt' else 'clear')
+        except Exception as e:
+            logging.error(f"Exception occurred while clearing the screen: {e}")
 
     # Methods to integrate with Target class methods
 
     def ensure_target_set(self):
         if not self.target:
-            print("Target URL is not set. Use 'S' command to set the target.")
-            self.logger.warning("Target URL is not set.")
+            print(f"{Fore.RED}Target URL is not set. Use 'S' command to set the target.{Style.RESET_ALL}")
+            logging.warning("Target URL is not set.")
             return False
         return True
 
@@ -191,12 +218,14 @@ Select an option:
                 target = Target(self.target)
                 comments, success = target.Extract_Comments()
                 if success:
-                    self.logger.info("Extracted HTML comments successfully.")
-                    print(comments)
+                    logging.info("Extracted HTML comments successfully.")
+                    print(f"{Fore.GREEN}{comments}{Style.RESET_ALL}")
                 else:
-                    self.logger.error(f"Failed to extract HTML comments: {comments}")
+                    logging.error(f"Failed to extract HTML comments: {comments}")
+                    print(f"{Fore.RED}Error extracting HTML comments: {comments}{Style.RESET_ALL}")
             except Exception as e:
-                self.logger.error(f"Exception occurred while extracting HTML comments: {e}")
+                logging.error(f"Exception occurred while extracting HTML comments: {e}")
+                print(f"{Fore.RED}Exception occurred: {e}{Style.RESET_ALL}")
 
     def extract_meta_tags(self):
         if self.ensure_target_set():
@@ -204,12 +233,14 @@ Select an option:
                 target = Target(self.target)
                 metadata, success = target.Extract_MetaData()
                 if success:
-                    self.logger.info("Extracted meta tags successfully.")
-                    print(metadata)
+                    logging.info("Extracted meta tags successfully.")
+                    print(f"{Fore.GREEN}{metadata}{Style.RESET_ALL}")
                 else:
-                    self.logger.error(f"Failed to extract meta tags: {metadata}")
+                    logging.error(f"Failed to extract meta tags: {metadata}")
+                    print(f"{Fore.RED}Error extracting meta tags: {metadata}{Style.RESET_ALL}")
             except Exception as e:
-                self.logger.error(f"Exception occurred while extracting meta tags: {e}")
+                logging.error(f"Exception occurred while extracting meta tags: {e}")
+                print(f"{Fore.RED}Exception occurred: {e}{Style.RESET_ALL}")
 
     def extract_urls(self):
         if self.ensure_target_set():
@@ -217,12 +248,14 @@ Select an option:
                 target = Target(self.target)
                 urls, success = target.Extract_URLS()
                 if success:
-                    self.logger.info("Extracted URLs successfully.")
-                    print(urls)
+                    logging.info("Extracted URLs successfully.")
+                    print(f"{Fore.GREEN}{urls}{Style.RESET_ALL}")
                 else:
-                    self.logger.error(f"Failed to extract URLs: {urls}")
+                    logging.error(f"Failed to extract URLs: {urls}")
+                    print(f"{Fore.RED}Error extracting URLs: {urls}{Style.RESET_ALL}")
             except Exception as e:
-                self.logger.error(f"Exception occurred while extracting URLs: {e}")
+                logging.error(f"Exception occurred while extracting URLs: {e}")
+                print(f"{Fore.RED}Exception occurred: {e}{Style.RESET_ALL}")
 
     def extract_email_addresses(self):
         if self.ensure_target_set():
@@ -230,12 +263,14 @@ Select an option:
                 target = Target(self.target)
                 emails, success = target.Extract_Emails()
                 if success:
-                    self.logger.info("Extracted email addresses successfully.")
-                    print(emails)
+                    logging.info("Extracted email addresses successfully.")
+                    print(f"{Fore.GREEN}{emails}{Style.RESET_ALL}")
                 else:
-                    self.logger.error(f"Failed to extract email addresses: {emails}")
+                    logging.error(f"Failed to extract email addresses: {emails}")
+                    print(f"{Fore.RED}Error extracting email addresses: {emails}{Style.RESET_ALL}")
             except Exception as e:
-                self.logger.error(f"Exception occurred while extracting email addresses: {e}")
+                logging.error(f"Exception occurred while extracting email addresses: {e}")
+                print(f"{Fore.RED}Exception occurred: {e}{Style.RESET_ALL}")
 
     def extract_robots_txt(self):
         if self.ensure_target_set():
@@ -243,12 +278,14 @@ Select an option:
                 target = Target(self.target)
                 content, status_code, success = target.Extract_Robots()
                 if success:
-                    self.logger.info("Extracted robots.txt content successfully.")
-                    print(content)
+                    logging.info("Extracted robots.txt content successfully.")
+                    print(f"{Fore.GREEN}{content}{Style.RESET_ALL}")
                 else:
-                    self.logger.error(f"Failed to extract robots.txt: {content}")
+                    logging.error(f"Failed to extract robots.txt: {content}")
+                    print(f"{Fore.RED}Error extracting robots.txt: {content}{Style.RESET_ALL}")
             except Exception as e:
-                self.logger.error(f"Exception occurred while extracting robots.txt: {e}")
+                logging.error(f"Exception occurred while extracting robots.txt: {e}")
+                print(f"{Fore.RED}Exception occurred: {e}{Style.RESET_ALL}")
 
     def extract_urls_from_sitemap(self):
         if self.ensure_target_set():
@@ -256,12 +293,14 @@ Select an option:
                 target = Target(self.target)
                 urls, status_code, success = target.Extract_Sitemap()
                 if success:
-                    self.logger.info("Extracted URLs from sitemap.xml successfully.")
-                    print(urls)
+                    logging.info("Extracted URLs from sitemap.xml successfully.")
+                    print(f"{Fore.GREEN}{urls}{Style.RESET_ALL}")
                 else:
-                    self.logger.error(f"Failed to extract URLs from sitemap.xml: {urls}")
+                    logging.error(f"Failed to extract URLs from sitemap.xml: {urls}")
+                    print(f"{Fore.RED}Error extracting URLs from sitemap.xml: {urls}{Style.RESET_ALL}")
             except Exception as e:
-                self.logger.error(f"Exception occurred while extracting URLs from sitemap.xml: {e}")
+                logging.error(f"Exception occurred while extracting URLs from sitemap.xml: {e}")
+                print(f"{Fore.RED}Exception occurred: {e}{Style.RESET_ALL}")
 
     def extract_urls_from_xml(self):
         if self.ensure_target_set():
@@ -269,12 +308,14 @@ Select an option:
                 target = Target(self.target)
                 urls, status_code, success = target.Extract_XML_URLS()
                 if success:
-                    self.logger.info("Extracted URLs from XML content successfully.")
-                    print(urls)
+                    logging.info("Extracted URLs from XML content successfully.")
+                    print(f"{Fore.GREEN}{urls}{Style.RESET_ALL}")
                 else:
-                    self.logger.error(f"Failed to extract URLs from XML content: {urls}")
+                    logging.error(f"Failed to extract URLs from XML content: {urls}")
+                    print(f"{Fore.RED}Error extracting URLs from XML content: {urls}{Style.RESET_ALL}")
             except Exception as e:
-                self.logger.error(f"Exception occurred while extracting URLs from XML content: {e}")
+                logging.error(f"Exception occurred while extracting URLs from XML content: {e}")
+                print(f"{Fore.RED}Exception occurred: {e}{Style.RESET_ALL}")
 
     def extract_wp_login_form_params(self):
         if self.ensure_target_set():
@@ -282,12 +323,14 @@ Select an option:
                 target = Target(self.target)
                 form_params, status_code, success = target.Extract_WPLOGIN()
                 if success:
-                    self.logger.info("Extracted WordPress login form parameters successfully.")
-                    print(form_params)
+                    logging.info("Extracted WordPress login form parameters successfully.")
+                    print(f"{Fore.GREEN}{form_params}{Style.RESET_ALL}")
                 else:
-                    self.logger.error(f"Failed to extract WordPress login form parameters: {form_params}")
+                    logging.error(f"Failed to extract WordPress login form parameters: {form_params}")
+                    print(f"{Fore.RED}Error extracting WordPress login form parameters: {form_params}{Style.RESET_ALL}")
             except Exception as e:
-                self.logger.error(f"Exception occurred while extracting WordPress login form parameters: {e}")
+                logging.error(f"Exception occurred while extracting WordPress login form parameters: {e}")
+                print(f"{Fore.RED}Exception occurred: {e}{Style.RESET_ALL}")
 
 if __name__ == "__main__":
     shell = Shell()
