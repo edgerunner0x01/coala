@@ -16,3 +16,11 @@
 2024-06-22 03:54:47,338 - root - INFO - Starting the shell.
 2024-06-22 03:55:16,438 - root - INFO - Starting the shell.
 2024-06-22 03:55:54,937 - root - INFO - Starting the shell.
+2024-06-22 04:03:13,622 - root - INFO - Starting the shell.
+2024-06-22 04:03:21,661 - root - INFO - Target set to: https://github.com/
+2024-06-22 04:03:25,153 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): github.com:443
+2024-06-22 04:03:25,654 - urllib3.connectionpool - DEBUG - https://github.com:443 "GET / HTTP/1.1" 200 None
+2024-06-22 04:03:25,772 - Shell - INFO - Extracted HTML comments successfully.
+2024-06-22 04:03:27,380 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): github.com:443
+2024-06-22 04:03:27,608 - urllib3.connectionpool - DEBUG - https://github.com:443 "GET / HTTP/1.1" 200 None
+2024-06-22 04:03:27,781 - Shell - INFO - Extracted meta tags successfully.
