@@ -36,8 +36,8 @@ class Log:
         "CRITICAL": logging.CRITICAL
     }
 
-    def __init__(self, log_method: str = "DEBUG"):
-        self.logger = logging.getLogger(__name__)
+    def __init__(self, log_method: str = "DEBUG", logger_name: str = "zProbe"):
+        self.logger = logging.getLogger(logger_name)
         self.configure_logging(log_method)
 
     def configure_logging(self, log_method: str):
@@ -46,7 +46,7 @@ class Log:
             logging.basicConfig(level=log_level,
                                 format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                                 handlers=[
-                                    logging.FileHandler("target.log"),
+                                    logging.FileHandler("Log/Log.log"),
                                     logging.StreamHandler()
                                 ])
         except Exception as e:
