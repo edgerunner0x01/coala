@@ -1,3 +1,4 @@
+from bs4 import BeautifulSoup
 import validators
 import logging
 import sys
@@ -39,7 +40,7 @@ class Log:
 class Shell:
     """A command-line interface shell for performing various extraction tasks on a target URL."""
 
-    Commands = [str(i) for i in range(9)] + ["S", "M", "C", "99", ""]
+    Commands = [str(i) for i in range(9)] + ["S", "M", "C", "99", "" , "X"]
 
     def __init__(self):
         """Initializes the Shell with default values and messages."""
@@ -100,7 +101,9 @@ Options:
   {Fore.LIGHTMAGENTA_EX}[99] Exit{Fore.RESET}
       Exits the program.
 {Style.RESET_ALL}
-"""
+        
+"""     
+        self.target = None
         self.menu = f"""{Fore.MAGENTA}
 # Select an option:
 
@@ -113,7 +116,8 @@ Options:
 {Fore.LIGHTMAGENTA_EX}[7] Extract URLs from XML (Sitemap Schema){Fore.RESET}
 {Fore.LIGHTMAGENTA_EX}[8] Extract WordPress Login Form Params{Fore.RESET}
 
-{Fore.CYAN}[S] Set target (URL){Fore.RESET}
+{Fore.CYAN}[S] Set target (URL) [{self.target}]{Fore.RESET}
+{Fore.CYAN}[X] Print target HTML Source{Fore.RESET}
 {Fore.CYAN}[M] Menu{Fore.RESET}
 {Fore.CYAN}[C] Clear{Fore.RESET}
 {Fore.CYAN}[0] Help{Fore.RESET}
@@ -121,7 +125,6 @@ Options:
 
 {Style.RESET_ALL}
 """
-        self.target = None
         self.prompt = f"{Fore.LIGHTMAGENTA_EX}> {Style.RESET_ALL}"
 
     def Run(self):
@@ -140,7 +143,9 @@ Options:
 
     def execute_command(self, command):
         """Executes the command based on user input."""
-        if command == "1":
+        if command == "X":
+            self.extract_source()
+        elif command == "1":
             self.extract_html_comments()
         elif command == "2":
             self.extract_meta_tags()
@@ -174,6 +179,27 @@ Options:
             if validators.url(target):
                 self.target = target
                 print(f"{Fore.GREEN}[+] Target is set to '{self.target}' successfully.{Style.RESET_ALL}")
+                self.menu = f"""{Fore.MAGENTA}
+# Select an option:
+
+{Fore.LIGHTMAGENTA_EX}[1] Extract HTML Comments{Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[2] Extract Meta Tags{Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[3] Extract URLs (Links, Images, Scripts){Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[4] Extract Email Addresses{Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[5] Extract Robots.txt Content{Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[6] Extract URLs from Sitemap.xml{Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[7] Extract URLs from XML (Sitemap Schema){Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[8] Extract WordPress Login Form Params{Fore.RESET}
+
+{Fore.CYAN}[S] Set target (URL) [{self.target}]{Fore.RESET}
+{Fore.CYAN}[X] Print target HTML Source{Fore.RESET}
+{Fore.CYAN}[M] Menu{Fore.RESET}
+{Fore.CYAN}[C] Clear{Fore.RESET}
+{Fore.CYAN}[0] Help{Fore.RESET}
+{Fore.CYAN}[99] Exit{Fore.RESET}
+
+{Style.RESET_ALL}
+"""
                 logging.info(f"Target set to: {self.target}")
             else:
                 print(f"{Fore.RED}[!] Invalid URL. Please try again.{Style.RESET_ALL}")
@@ -240,6 +266,21 @@ Options:
                     print(f"{Fore.RED}Error extracting meta tags: {metadata}{Style.RESET_ALL}")
             except Exception as e:
                 logging.error(f"Exception occurred while extracting meta tags: {e}")
+                print(f"{Fore.RED}Exception occurred: {e}{Style.RESET_ALL}")
+
+    def extract_source(self):
+        if self.ensure_target_set():
+            try:
+                target = Target(self.target)
+                if target.HTTP_STATUS == 200:
+                    source=BeautifulSoup(target.source, 'html.parser').prettify()
+                    logging.info("Extracted HTML Source successfully.")
+                    print(f"{Fore.GREEN}{source}{Style.RESET_ALL}")
+                else:
+                    logging.error(f"Failed to extract HTML Source: {source}")
+                    print(f"{Fore.RED}Error extracting HTML Source: {source}{Style.RESET_ALL}")
+            except Exception as e:
+                logging.error(f"Exception occurred while extracting HTML Source: {e}")
                 print(f"{Fore.RED}Exception occurred: {e}{Style.RESET_ALL}")
 
     def extract_urls(self):
