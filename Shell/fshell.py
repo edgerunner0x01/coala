@@ -261,18 +261,21 @@ Options:
             logging.error(f"Exception occurred while clearing the screen: {e}")
 
     # Methods to integrate with Target class methods
-
     def ensure_target_set(self):
         if not self.target and not self.targets:
             print(f"{Fore.RED}Target URL(s) is not set. Use 'S' command to set the target(s).{Style.RESET_ALL}")
             logging.warning("Target(s) URL is not set.")
+            return False
+        elif self.target and not validators.url(self.target):
+            print(f"{Fore.RED}Invalid URL set as target. Please set a valid URL using 'S'.{Style.RESET_ALL}")
+            logging.warning("Invalid URL set as target.")
             return False
         return True
 
     def extract_html_comments(self):
         if self.ensure_target_set():
             try:
-                if isinstance(self.targets, list):  # Check if multiple targets are set
+                if isinstance(self.targets, list) and len(self.targets) > 0:  # Check if multiple targets are set
                     for target_url in self.targets:
                         target = Target(target_url)
                         comments, success = target.Extract_Comments()
@@ -298,7 +301,7 @@ Options:
     def extract_meta_tags(self):
         if self.ensure_target_set():
             try:
-                if isinstance(self.targets, list):  # Check if multiple targets are set
+                if isinstance(self.targets, list) and len(self.targets) > 0:  # Check if multiple targets are set
                     for target_url in self.targets:
                         target = Target(target_url)
                         metadata, success = target.Extract_MetaData()
@@ -324,7 +327,7 @@ Options:
     def extract_source(self):
         if self.ensure_target_set():
             try:
-                if isinstance(self.targets, list):  # Check if multiple targets are set
+                if isinstance(self.targets, list) and len(self.targets) > 0:  # Check if multiple targets are set
                     for target_url in self.targets:
                         target = Target(target_url)
                         if target.HTTP_STATUS == 200:
@@ -350,7 +353,7 @@ Options:
     def extract_urls(self):
         if self.ensure_target_set():
             try:
-                if isinstance(self.targets, list):  # Check if multiple targets are set
+                if isinstance(self.targets, list) and len(self.targets) > 0:  # Check if multiple targets are set
                     for target_url in self.targets:
                         target = Target(target_url)
                         urls, success = target.Extract_URLS()
@@ -376,7 +379,7 @@ Options:
     def extract_email_addresses(self):
         if self.ensure_target_set():
             try:
-                if isinstance(self.targets, list):  # Check if multiple targets are set
+                if isinstance(self.targets, list) and len(self.targets) > 0:  # Check if multiple targets are set
                     for target_url in self.targets:
                         target = Target(target_url)
                         emails, success = target.Extract_Emails()
@@ -402,7 +405,7 @@ Options:
     def extract_robots_txt(self):
         if self.ensure_target_set():
             try:
-                if isinstance(self.targets, list):  # Check if multiple targets are set
+                if isinstance(self.targets, list) and len(self.targets) > 0:  # Check if multiple targets are set
                     for target_url in self.targets:
                         target = Target(target_url)
                         content, status_code, success = target.Extract_Robots()
@@ -428,7 +431,7 @@ Options:
     def extract_urls_from_sitemap(self):
         if self.ensure_target_set():
             try:
-                if isinstance(self.targets, list):  # Check if multiple targets are set
+                if isinstance(self.targets, list) and len(self.targets) > 0:  # Check if multiple targets are set
                     for target_url in self.targets:
                         target = Target(target_url)
                         urls, status_code, success = target.Extract_Sitemap()
@@ -454,7 +457,7 @@ Options:
     def extract_urls_from_xml(self):
         if self.ensure_target_set():
             try:
-                if isinstance(self.targets, list):  # Check if multiple targets are set
+                if isinstance(self.targets, list) and len(self.targets) > 0:  # Check if multiple targets are set
                     for target_url in self.targets:
                         target = Target(target_url)
                         urls, status_code, success = target.Extract_XML_URLS()
@@ -480,7 +483,7 @@ Options:
     def extract_wp_login_form_params(self):
         if self.ensure_target_set():
             try:
-                if isinstance(self.targets, list):  # Check if multiple targets are set
+                if isinstance(self.targets, list) and len(self.targets) > 0:  # Check if multiple targets are set
                     for target_url in self.targets:
                         target = Target(target_url)
                         form_params, status_code, success = target.Extract_WPLOGIN()
