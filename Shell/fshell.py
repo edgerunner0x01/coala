@@ -3,6 +3,8 @@ import validators
 import logging
 import sys
 import os
+import json
+from json import * 
 from random import randint
 from colorama import init, Fore, Back, Style
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'module_to_import')))
@@ -40,7 +42,7 @@ class Log:
 class Shell:
     """A command-line interface shell for performing various extraction tasks on a target URL."""
 
-    Commands = [str(i) for i in range(9)] + ["S", "M", "C", "99", "" , "X"]
+    Commands = [str(i) for i in range(9)] + ["S", "M", "C", "99", "", "P", "X"]
 
     def __init__(self):
         """Initializes the Shell with default values and messages."""
@@ -105,6 +107,7 @@ Options:
 """     
         self.target = None
         self.targets = []
+        self.proxies=[]
         self.menu = f"""{Fore.MAGENTA}
 # Select an option:
 
@@ -118,6 +121,7 @@ Options:
 {Fore.LIGHTMAGENTA_EX}[8] Extract WordPress Login Form Params{Fore.RESET}
 
 {Fore.CYAN}[S] Set target (URL or File Path) [{self.target}]{Fore.RESET}
+{Fore.CYAN}[P] Set Proxies (JSON File Path) [{self.proxies}]{Fore.RESET}
 {Fore.CYAN}[X] Print target HTML Source{Fore.RESET}
 {Fore.CYAN}[M] Menu{Fore.RESET}
 {Fore.CYAN}[C] Clear{Fore.RESET}
@@ -162,6 +166,8 @@ Options:
             self.extract_wp_login_form_params()
         elif command == "S":
             self.set_target()
+        elif command == "P":
+            self.set_proxies()
         elif command == "C":
             self.Clear()
         elif command == "M":
@@ -193,6 +199,7 @@ Options:
 {Fore.LIGHTMAGENTA_EX}[8] Extract WordPress Login Form Params{Fore.RESET}
 
 {Fore.CYAN}[S] Set target (URL or File Path) [{self.target}]{Fore.RESET}
+{Fore.CYAN}[P] Set Proxies (JSON File Path) [{choice}]{Fore.RESET}
 {Fore.CYAN}[X] Print target HTML Source{Fore.RESET}
 {Fore.CYAN}[M] Menu{Fore.RESET}
 {Fore.CYAN}[C] Clear{Fore.RESET}
@@ -221,7 +228,8 @@ Options:
 {Fore.LIGHTMAGENTA_EX}[7] Extract URLs from XML (Sitemap Schema){Fore.RESET}
 {Fore.LIGHTMAGENTA_EX}[8] Extract WordPress Login Form Params{Fore.RESET}
 
-{Fore.CYAN}[S] Set target (URL or File Path) [{choice}]{Fore.RESET}
+{Fore.CYAN}[S] Set target (URL or File Path) [{self.target}]{Fore.RESET}
+{Fore.CYAN}[P] Set Proxies (JSON File Path) [{choice}]{Fore.RESET}
 {Fore.CYAN}[X] Print target HTML Source{Fore.RESET}
 {Fore.CYAN}[M] Menu{Fore.RESET}
 {Fore.CYAN}[C] Clear{Fore.RESET}
@@ -260,7 +268,58 @@ Options:
         except Exception as e:
             logging.error(f"Exception occurred while clearing the screen: {e}")
 
-    # Methods to integrate with Target class methods
+    def load_proxies(self, proxies_file):
+        """Loads proxies from a JSON file."""
+        try:
+            choice=proxies_file
+            with open(proxies_file, 'r') as f:
+                proxies_data = json.load(f)
+                print(f"{Fore.GREEN}[+] Proxies are set to '{choice}' successfully.{Style.RESET_ALL}")
+                self.menu = f"""{Fore.MAGENTA}
+# Select an option:
+
+{Fore.LIGHTMAGENTA_EX}[1] Extract HTML Comments{Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[2] Extract Meta Tags{Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[3] Extract URLs (Links, Images, Scripts){Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[4] Extract Email Addresses{Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[5] Extract Robots.txt Content{Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[6] Extract URLs from Sitemap.xml{Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[7] Extract URLs from XML (Sitemap Schema){Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[8] Extract WordPress Login Form Params{Fore.RESET}
+
+{Fore.CYAN}[S] Set target (URL or File Path) [{self.target}]{Fore.RESET}
+{Fore.CYAN}[P] Set Proxies (JSON File Path) [{choice}]{Fore.RESET}
+{Fore.CYAN}[X] Print target HTML Source{Fore.RESET}
+{Fore.CYAN}[M] Menu{Fore.RESET}
+{Fore.CYAN}[C] Clear{Fore.RESET}
+{Fore.CYAN}[0] Help{Fore.RESET}
+{Fore.CYAN}[99] Exit{Fore.RESET}{Style.RESET_ALL}
+"""
+            logging.info(f"Proxies set from file: {choice}")
+            return proxies_data
+        except FileNotFoundError:
+            logging.error(f"Error: Proxies file '{proxies_file}' not found.")
+            print(f"{Fore.RED}Error: Proxies file '{proxies_file}' not found.{Fore.RESET}")
+        except json.JSONDecodeError:
+            logging.error(f"Error: Invalid JSON format in proxies file '{proxies_file}'.")
+            print(f"{Fore.RED}Error: Invalid JSON format in proxies file '{proxies_file}'.{Fore.RESET}")
+        return None
+    
+    def set_proxies(self):
+        """Sets the Proxies list from a JSON file"""
+        try:
+            choice = input(f"{Fore.CYAN}[*] Set Proxies JSON File: {Style.RESET_ALL}").strip()            
+        # Check if the input is a valid 
+            self.proxies = self.load_proxies(choice) if choice else print(f"{Fore.RED}[!] Invalid URL or file path. Please try again.{Style.RESET_ALL}")
+    
+        except Exception as e:
+            logging.error(f"Failed to set Proxies: {e}")
+            print(f"{Fore.RED}An error occurred while setting the Proxies: {e}{Style.RESET_ALL}")
+
+    #################################################
+    # Methods to integrate with Target class methods#
+    #################################################
+    
     def ensure_target_set(self):
         if not self.target and not self.targets:
             print(f"{Fore.RED}Target URL(s) is not set. Use 'S' command to set the target(s).{Style.RESET_ALL}")
@@ -277,7 +336,7 @@ Options:
             try:
                 if isinstance(self.targets, list) and len(self.targets) > 0:  # Check if multiple targets are set
                     for target_url in self.targets:
-                        target = Target(target_url)
+                        target = Target(target_url,self.proxies)
                         comments, success = target.Extract_Comments()
                         if success:
                             logging.info(f"Extracted HTML comments from {target_url} successfully.")
@@ -303,7 +362,7 @@ Options:
             try:
                 if isinstance(self.targets, list) and len(self.targets) > 0:  # Check if multiple targets are set
                     for target_url in self.targets:
-                        target = Target(target_url)
+                        target = Target(target_url,self.proxies)
                         metadata, success = target.Extract_MetaData()
                         if success:
                             logging.info(f"Extracted meta tags from {target_url} successfully.")
@@ -329,7 +388,7 @@ Options:
             try:
                 if isinstance(self.targets, list) and len(self.targets) > 0:  # Check if multiple targets are set
                     for target_url in self.targets:
-                        target = Target(target_url)
+                        target = Target(target_url,self.proxies)
                         if target.HTTP_STATUS == 200:
                             source = BeautifulSoup(target.source, 'html.parser').prettify()
                             logging.info(f"Extracted HTML Source from {target_url} successfully.")
@@ -355,7 +414,7 @@ Options:
             try:
                 if isinstance(self.targets, list) and len(self.targets) > 0:  # Check if multiple targets are set
                     for target_url in self.targets:
-                        target = Target(target_url)
+                        target = Target(target_url,self.proxies)
                         urls, success = target.Extract_URLS()
                         if success:
                             logging.info(f"Extracted URLs from {target_url} successfully.")
@@ -381,7 +440,7 @@ Options:
             try:
                 if isinstance(self.targets, list) and len(self.targets) > 0:  # Check if multiple targets are set
                     for target_url in self.targets:
-                        target = Target(target_url)
+                        target = Target(target_url,self.proxies)
                         emails, success = target.Extract_Emails()
                         if success:
                             logging.info(f"Extracted email addresses from {target_url} successfully.")
@@ -407,7 +466,7 @@ Options:
             try:
                 if isinstance(self.targets, list) and len(self.targets) > 0:  # Check if multiple targets are set
                     for target_url in self.targets:
-                        target = Target(target_url)
+                        target = Target(target_url,self.proxies)
                         content, status_code, success = target.Extract_Robots()
                         if success:
                             logging.info(f"Extracted robots.txt content from {target_url} successfully.")
@@ -433,7 +492,7 @@ Options:
             try:
                 if isinstance(self.targets, list) and len(self.targets) > 0:  # Check if multiple targets are set
                     for target_url in self.targets:
-                        target = Target(target_url)
+                        target = Target(target_url,self.proxies)
                         urls, status_code, success = target.Extract_Sitemap()
                         if success:
                             logging.info(f"Extracted URLs from sitemap.xml at {target_url} successfully.")
@@ -459,7 +518,7 @@ Options:
             try:
                 if isinstance(self.targets, list) and len(self.targets) > 0:  # Check if multiple targets are set
                     for target_url in self.targets:
-                        target = Target(target_url)
+                        target = Target(target_url,self.proxies)
                         urls, status_code, success = target.Extract_XML_URLS()
                         if success:
                             logging.info(f"Extracted URLs from XML content at {target_url} successfully.")
@@ -485,7 +544,7 @@ Options:
             try:
                 if isinstance(self.targets, list) and len(self.targets) > 0:  # Check if multiple targets are set
                     for target_url in self.targets:
-                        target = Target(target_url)
+                        target = Target(target_url,self.proxies)
                         form_params, status_code, success = target.Extract_WPLOGIN()
                         if success:
                             logging.info(f"Extracted WordPress login form parameters from {target_url} successfully.")
