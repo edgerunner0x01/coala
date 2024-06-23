@@ -139,6 +139,7 @@ Options:
         self.target = None
         self.targets = []
         self.proxies=[]
+        self.proxies_path=None
         self.menu = f"""{Fore.MAGENTA}
 # Select an option:
 
@@ -152,7 +153,7 @@ Options:
 {Fore.LIGHTMAGENTA_EX}[8] Extract WordPress Login Form Params{Fore.RESET}
 
 {Fore.CYAN}[S] Set target (URL or File Path) [{self.target}]{Fore.RESET}
-{Fore.CYAN}[P] Set Proxies (JSON File Path) [{None if self.proxies == [] else self.proxies}]{Fore.RESET}
+{Fore.CYAN}[P] Set Proxies (JSON File Path) [{None if self.proxies_path == [] else self.proxies_path}]{Fore.RESET}
 {Fore.CYAN}[X] Print target HTML Source{Fore.RESET}
 {Fore.CYAN}[M] Menu{Fore.RESET}
 {Fore.CYAN}[C] Clear{Fore.RESET}
@@ -230,7 +231,7 @@ Options:
 {Fore.LIGHTMAGENTA_EX}[8] Extract WordPress Login Form Params{Fore.RESET}
 
 {Fore.CYAN}[S] Set target (URL or File Path) [{self.target}]{Fore.RESET}
-{Fore.CYAN}[P] Set Proxies (JSON File Path) [{choice}]{Fore.RESET}
+{Fore.CYAN}[P] Set Proxies (JSON File Path) [{None if self.proxies_path == [] else self.proxies_path}]{Fore.RESET}
 {Fore.CYAN}[X] Print target HTML Source{Fore.RESET}
 {Fore.CYAN}[M] Menu{Fore.RESET}
 {Fore.CYAN}[C] Clear{Fore.RESET}
@@ -259,8 +260,8 @@ Options:
 {Fore.LIGHTMAGENTA_EX}[7] Extract URLs from XML (Sitemap Schema){Fore.RESET}
 {Fore.LIGHTMAGENTA_EX}[8] Extract WordPress Login Form Params{Fore.RESET}
 
-{Fore.CYAN}[S] Set target (URL or File Path) [{self.target}]{Fore.RESET}
-{Fore.CYAN}[P] Set Proxies (JSON File Path) [{choice}]{Fore.RESET}
+{Fore.CYAN}[S] Set target (URL or File Path) [{choice}]{Fore.RESET}
+{Fore.CYAN}[P] Set Proxies (JSON File Path) [{None if self.proxies_path == [] else self.proxies_path}]{Fore.RESET}
 {Fore.CYAN}[X] Print target HTML Source{Fore.RESET}
 {Fore.CYAN}[M] Menu{Fore.RESET}
 {Fore.CYAN}[C] Clear{Fore.RESET}
@@ -303,6 +304,7 @@ Options:
         """Loads proxies from a JSON file."""
         try:
             choice=proxies_file
+            self.proxies_path=choice
             with open(proxies_file, 'r') as f:
                 proxies_data = json.load(f)
                 print(f"{Fore.GREEN}[+] Proxies are set to '{choice}' successfully.{Style.RESET_ALL}")
