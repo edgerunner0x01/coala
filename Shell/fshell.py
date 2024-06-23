@@ -10,7 +10,7 @@ from colorama import init, Fore, Back, Style
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'module_to_import')))
 from zProbe.Lib.zProbe import *
 
-# Initialize colorama
+# Initialize colorama c
 init(autoreset=True)
 
 # Configure logging
