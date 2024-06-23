@@ -10,7 +10,7 @@ from colorama import init, Fore, Back, Style
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'module_to_import')))
 from zProbe.Lib.zProbe import *
 
-# Initialize colorama c
+# Initialize colorama 
 init(autoreset=True)
 
 # Configure logging
@@ -57,45 +57,75 @@ class Shell:
         self.help_message = f"""{Fore.MAGENTA}
 Options:
   {Fore.LIGHTMAGENTA_EX}[1] Extract HTML Comments{Fore.RESET}
-      Extracts all HTML comments from the target web page. 
-      HTML comments are enclosed within <!-- and -->.
+      Extracts all HTML comments from the target web page.
+      HTML comments are sections enclosed within <!-- and -->.
+      Useful for finding hidden notes or sections that may contain sensitive information.
+      Example: <!-- This is a comment -->
 
   {Fore.LIGHTMAGENTA_EX}[2] Extract Meta Tags{Fore.RESET}
       Extracts metadata from the target web page.
-      This includes tags like <meta name="description" content="...">.
+      Includes tags like <meta name="description" content="...">.
+      Useful for understanding the SEO setup and metadata used by the website.
+      Example: <meta name="keywords" content="python, web, extraction">
 
   {Fore.LIGHTMAGENTA_EX}[3] Extract URLs (Links, Images, Scripts){Fore.RESET}
-      Extracts all URLs from the target web page, including:
+      Extracts all URLs from the target web page.
+      Includes:
       - Hyperlinks (<a href="...">)
       - Image sources (<img src="...">)
       - Script sources (<script src="...">)
+      Useful for gathering all linked resources on a page for analysis.
+      Example: <a href="https://example.com">Link</a>
 
   {Fore.LIGHTMAGENTA_EX}[4] Extract Email Addresses{Fore.RESET}
-      Extracts email addresses from the target web page. 
-      It searches for patterns that resemble email addresses (e.g., user@example.com).
+      Extracts email addresses from the target web page.
+      Searches for patterns that resemble email addresses (e.g., user@example.com).
+      Useful for finding contact information.
+      Example: user@example.com
 
   {Fore.LIGHTMAGENTA_EX}[5] Extract Robots.txt Content{Fore.RESET}
       Retrieves and displays the content of the robots.txt file from the target website.
       This file often contains rules for web crawlers about which parts of the site to avoid.
+      Useful for understanding which parts of a site are restricted from crawling.
+      Example: User-agent: *\nDisallow: /admin
 
   {Fore.LIGHTMAGENTA_EX}[6] Extract URLs from Sitemap.xml{Fore.RESET}
       Extracts all URLs listed in the sitemap.xml file from the target website.
       Sitemaps typically help search engines to better index a site.
+      Useful for discovering all URLs the site owner wants to be indexed.
+      Example: <url><loc>https://example.com/page1</loc></url>
 
   {Fore.LIGHTMAGENTA_EX}[7] Extract URLs from XML (Sitemap Schema){Fore.RESET}
       Parses any XML content conforming to the sitemap schema to extract URLs.
       Useful for custom sitemap formats or other structured XML data.
+      Example: <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://example.com/page2</loc></url></urlset>
 
   {Fore.LIGHTMAGENTA_EX}[8] Extract WordPress Login Form Params{Fore.RESET}
       Extracts the form parameters required to log in to a WordPress site.
       This includes fields like username and password input names.
+      Useful for identifying login forms and their parameters for automation.
+      Example: <input type="text" name="log"> (username field)
 
-  {Fore.LIGHTMAGENTA_EX}[S] Set target (URL){Fore.RESET}
+  {Fore.LIGHTMAGENTA_EX}[S] Set Target (URL or File Path){Fore.RESET}
       Sets the target URL for subsequent extraction operations.
-      Example: "S" followed by "https://example.com".
+      You can also set a file path containing multiple URLs, one per line.
+      Example: "S https://example.com" or "S urls.txt"
+
+  {Fore.LIGHTMAGENTA_EX}[P] Set Proxies (JSON File Path){Fore.RESET}
+      Sets the proxies from a JSON file for the extraction tasks.
+      The JSON file should contain a list of proxies.
+      Example: "P proxies.json"
+
+  {Fore.LIGHTMAGENTA_EX}[X] Print Target HTML Source{Fore.RESET}
+      Prints the entire HTML source of the target web page.
+      Useful for a quick inspection of the HTML structure.
+      Example: <html><head>...</head><body>...</body></html>
 
   {Fore.LIGHTMAGENTA_EX}[M] Menu{Fore.RESET}
       Displays the main menu with options to choose from.
+
+  {Fore.LIGHTMAGENTA_EX}[C] Clear{Fore.RESET}
+      Clears the screen.
 
   {Fore.LIGHTMAGENTA_EX}[0] Help{Fore.RESET}
       Displays this help text, providing details about each option and how to use them.
@@ -103,8 +133,9 @@ Options:
   {Fore.LIGHTMAGENTA_EX}[99] Exit{Fore.RESET}
       Exits the program.
 {Style.RESET_ALL}
-        
-"""     
+
+"""
+  
         self.target = None
         self.targets = []
         self.proxies=[]
@@ -121,7 +152,7 @@ Options:
 {Fore.LIGHTMAGENTA_EX}[8] Extract WordPress Login Form Params{Fore.RESET}
 
 {Fore.CYAN}[S] Set target (URL or File Path) [{self.target}]{Fore.RESET}
-{Fore.CYAN}[P] Set Proxies (JSON File Path) [{self.proxies}]{Fore.RESET}
+{Fore.CYAN}[P] Set Proxies (JSON File Path) [{None if self.proxies == [] else self.proxies}]{Fore.RESET}
 {Fore.CYAN}[X] Print target HTML Source{Fore.RESET}
 {Fore.CYAN}[M] Menu{Fore.RESET}
 {Fore.CYAN}[C] Clear{Fore.RESET}
