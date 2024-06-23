@@ -2,8 +2,8 @@ from zProbe.Lib.zProbe import Target
 from zProbe.Lib import zProbe
 from Shell import fshell
 
-zProbe.logger=zProbe.Log("DEBUG").logger
-fshell.Shell.logger = fshell.Log(log_method="INFO").logger
+zProbe.logger=zProbe.Log("INFO").logger
+fshell.Shell.logger = fshell.Log(log_method="DEBUG").logger
 
 def main():
 

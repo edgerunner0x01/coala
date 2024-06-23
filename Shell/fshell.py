@@ -171,11 +171,13 @@ Options:
             self.exit_shell()
 
     def set_target(self):
-        """Sets the target URL for extraction."""
+        """Sets the target URL or multiple target URLs for extraction."""
         try:
-            target = input(f"{Fore.CYAN}[*] Set Target (URL): {Style.RESET_ALL}").strip()
-            if validators.url(target):
-                self.target = target
+            choice = input(f"{Fore.CYAN}[*] Set Target (URL or file path): {Style.RESET_ALL}").strip()
+            
+            # Check if the input is a valid URL
+            if validators.url(choice):
+                self.target = choice
                 print(f"{Fore.GREEN}[+] Target is set to '{self.target}' successfully.{Style.RESET_ALL}")
                 self.menu = f"""{Fore.MAGENTA}
 # Select an option:
@@ -189,7 +191,7 @@ Options:
 {Fore.LIGHTMAGENTA_EX}[7] Extract URLs from XML (Sitemap Schema){Fore.RESET}
 {Fore.LIGHTMAGENTA_EX}[8] Extract WordPress Login Form Params{Fore.RESET}
 
-{Fore.CYAN}[S] Set target (URL) [{self.target}]{Fore.RESET}
+{Fore.CYAN}[S] Set target (URL or File Path) [{self.target}]{Fore.RESET}
 {Fore.CYAN}[X] Print target HTML Source{Fore.RESET}
 {Fore.CYAN}[M] Menu{Fore.RESET}
 {Fore.CYAN}[C] Clear{Fore.RESET}
@@ -197,8 +199,40 @@ Options:
 {Fore.CYAN}[99] Exit{Fore.RESET}{Style.RESET_ALL}
 """
                 logging.info(f"Target set to: {self.target}")
+            
+            # Check if the input is a file path
+            elif os.path.isfile(choice):
+                with open(choice, 'r') as file:
+                    urls = file.readlines()
+                    urls = [url.strip() for url in urls if validators.url(url.strip())]
+                    if urls:
+                        self.targets = urls  # Store all valid URLs from the file
+                        print(f"{Fore.GREEN}[+] Targets are set from file: '{choice}'{Style.RESET_ALL}")
+                        self.menu = f"""{Fore.MAGENTA}
+# Select an option:
+
+{Fore.LIGHTMAGENTA_EX}[1] Extract HTML Comments{Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[2] Extract Meta Tags{Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[3] Extract URLs (Links, Images, Scripts){Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[4] Extract Email Addresses{Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[5] Extract Robots.txt Content{Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[6] Extract URLs from Sitemap.xml{Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[7] Extract URLs from XML (Sitemap Schema){Fore.RESET}
+{Fore.LIGHTMAGENTA_EX}[8] Extract WordPress Login Form Params{Fore.RESET}
+
+{Fore.CYAN}[S] Set target (URL or File Path) [{choice}]{Fore.RESET}
+{Fore.CYAN}[X] Print target HTML Source{Fore.RESET}
+{Fore.CYAN}[M] Menu{Fore.RESET}
+{Fore.CYAN}[C] Clear{Fore.RESET}
+{Fore.CYAN}[0] Help{Fore.RESET}
+{Fore.CYAN}[99] Exit{Fore.RESET}{Style.RESET_ALL}
+"""
+                        logging.info(f"Targets set from file: {choice}")
+                    else:
+                        print(f"{Fore.RED}[!] No valid URLs found in the file. Please check the file content.{Style.RESET_ALL}")
             else:
-                print(f"{Fore.RED}[!] Invalid URL. Please try again.{Style.RESET_ALL}")
+                print(f"{Fore.RED}[!] Invalid URL or file path. Please try again.{Style.RESET_ALL}")
+        
         except Exception as e:
             logging.error(f"Failed to set target: {e}")
             print(f"{Fore.RED}An error occurred while setting the target: {e}{Style.RESET_ALL}")
@@ -228,23 +262,34 @@ Options:
     # Methods to integrate with Target class methods
 
     def ensure_target_set(self):
-        if not self.target:
-            print(f"{Fore.RED}Target URL is not set. Use 'S' command to set the target.{Style.RESET_ALL}")
-            logging.warning("Target URL is not set.")
+        if not self.target and not self.targets:
+            print(f"{Fore.RED}Target URL(s) is not set. Use 'S' command to set the target(s).{Style.RESET_ALL}")
+            logging.warning("Target(s) URL is not set.")
             return False
         return True
 
     def extract_html_comments(self):
         if self.ensure_target_set():
             try:
-                target = Target(self.target)
-                comments, success = target.Extract_Comments()
-                if success:
-                    logging.info("Extracted HTML comments successfully.")
-                    print(f"{Fore.GREEN}{comments}{Style.RESET_ALL}")
+                if isinstance(self.targets, list):  # Check if multiple targets are set
+                    for target_url in self.targets:
+                        target = Target(target_url)
+                        comments, success = target.Extract_Comments()
+                        if success:
+                            logging.info(f"Extracted HTML comments from {target_url} successfully.")
+                            print(f"{Fore.GREEN}{comments}{Style.RESET_ALL}")
+                        else:
+                            logging.error(f"Failed to extract HTML comments from {target_url}: {comments}")
+                            print(f"{Fore.RED}Error extracting HTML comments from {target_url}: {comments}{Style.RESET_ALL}")
                 else:
-                    logging.error(f"Failed to extract HTML comments: {comments}")
-                    print(f"{Fore.RED}Error extracting HTML comments: {comments}{Style.RESET_ALL}")
+                    target = Target(self.target)
+                    comments, success = target.Extract_Comments()
+                    if success:
+                        logging.info("Extracted HTML comments successfully.")
+                        print(f"{Fore.GREEN}{comments}{Style.RESET_ALL}")
+                    else:
+                        logging.error(f"Failed to extract HTML comments: {comments}")
+                        print(f"{Fore.RED}Error extracting HTML comments: {comments}{Style.RESET_ALL}")
             except Exception as e:
                 logging.error(f"Exception occurred while extracting HTML comments: {e}")
                 print(f"{Fore.RED}Exception occurred: {e}{Style.RESET_ALL}")
@@ -252,14 +297,25 @@ Options:
     def extract_meta_tags(self):
         if self.ensure_target_set():
             try:
-                target = Target(self.target)
-                metadata, success = target.Extract_MetaData()
-                if success:
-                    logging.info("Extracted meta tags successfully.")
-                    print(f"{Fore.GREEN}{metadata}{Style.RESET_ALL}")
+                if isinstance(self.targets, list):  # Check if multiple targets are set
+                    for target_url in self.targets:
+                        target = Target(target_url)
+                        metadata, success = target.Extract_MetaData()
+                        if success:
+                            logging.info(f"Extracted meta tags from {target_url} successfully.")
+                            print(f"{Fore.GREEN}{metadata}{Style.RESET_ALL}")
+                        else:
+                            logging.error(f"Failed to extract meta tags from {target_url}: {metadata}")
+                            print(f"{Fore.RED}Error extracting meta tags from {target_url}: {metadata}{Style.RESET_ALL}")
                 else:
-                    logging.error(f"Failed to extract meta tags: {metadata}")
-                    print(f"{Fore.RED}Error extracting meta tags: {metadata}{Style.RESET_ALL}")
+                    target = Target(self.target)
+                    metadata, success = target.Extract_MetaData()
+                    if success:
+                        logging.info("Extracted meta tags successfully.")
+                        print(f"{Fore.GREEN}{metadata}{Style.RESET_ALL}")
+                    else:
+                        logging.error(f"Failed to extract meta tags: {metadata}")
+                        print(f"{Fore.RED}Error extracting meta tags: {metadata}{Style.RESET_ALL}")
             except Exception as e:
                 logging.error(f"Exception occurred while extracting meta tags: {e}")
                 print(f"{Fore.RED}Exception occurred: {e}{Style.RESET_ALL}")
@@ -267,14 +323,25 @@ Options:
     def extract_source(self):
         if self.ensure_target_set():
             try:
-                target = Target(self.target)
-                if target.HTTP_STATUS == 200:
-                    source=BeautifulSoup(target.source, 'html.parser').prettify()
-                    logging.info("Extracted HTML Source successfully.")
-                    print(f"{Fore.GREEN}{source}{Style.RESET_ALL}")
+                if isinstance(self.targets, list):  # Check if multiple targets are set
+                    for target_url in self.targets:
+                        target = Target(target_url)
+                        if target.HTTP_STATUS == 200:
+                            source = BeautifulSoup(target.source, 'html.parser').prettify()
+                            logging.info(f"Extracted HTML Source from {target_url} successfully.")
+                            print(f"{Fore.GREEN}{source}{Style.RESET_ALL}")
+                        else:
+                            logging.error(f"Failed to extract HTML Source from {target_url}: HTTP Status {target.HTTP_STATUS}")
+                            print(f"{Fore.RED}Error extracting HTML Source from {target_url}: HTTP Status {target.HTTP_STATUS}{Style.RESET_ALL}")
                 else:
-                    logging.error(f"Failed to extract HTML Source: {source}")
-                    print(f"{Fore.RED}Error extracting HTML Source: {source}{Style.RESET_ALL}")
+                    target = Target(self.target)
+                    if target.HTTP_STATUS == 200:
+                        source = BeautifulSoup(target.source, 'html.parser').prettify()
+                        logging.info("Extracted HTML Source successfully.")
+                        print(f"{Fore.GREEN}{source}{Style.RESET_ALL}")
+                    else:
+                        logging.error(f"Failed to extract HTML Source: HTTP Status {target.HTTP_STATUS}")
+                        print(f"{Fore.RED}Error extracting HTML Source: HTTP Status {target.HTTP_STATUS}{Style.RESET_ALL}")
             except Exception as e:
                 logging.error(f"Exception occurred while extracting HTML Source: {e}")
                 print(f"{Fore.RED}Exception occurred: {e}{Style.RESET_ALL}")
@@ -282,14 +349,25 @@ Options:
     def extract_urls(self):
         if self.ensure_target_set():
             try:
-                target = Target(self.target)
-                urls, success = target.Extract_URLS()
-                if success:
-                    logging.info("Extracted URLs successfully.")
-                    print(f"{Fore.GREEN}{urls}{Style.RESET_ALL}")
+                if isinstance(self.targets, list):  # Check if multiple targets are set
+                    for target_url in self.targets:
+                        target = Target(target_url)
+                        urls, success = target.Extract_URLS()
+                        if success:
+                            logging.info(f"Extracted URLs from {target_url} successfully.")
+                            print(f"{Fore.GREEN}{urls}{Style.RESET_ALL}")
+                        else:
+                            logging.error(f"Failed to extract URLs from {target_url}: {urls}")
+                            print(f"{Fore.RED}Error extracting URLs from {target_url}: {urls}{Style.RESET_ALL}")
                 else:
-                    logging.error(f"Failed to extract URLs: {urls}")
-                    print(f"{Fore.RED}Error extracting URLs: {urls}{Style.RESET_ALL}")
+                    target = Target(self.target)
+                    urls, success = target.Extract_URLS()
+                    if success:
+                        logging.info("Extracted URLs successfully.")
+                        print(f"{Fore.GREEN}{urls}{Style.RESET_ALL}")
+                    else:
+                        logging.error(f"Failed to extract URLs: {urls}")
+                        print(f"{Fore.RED}Error extracting URLs: {urls}{Style.RESET_ALL}")
             except Exception as e:
                 logging.error(f"Exception occurred while extracting URLs: {e}")
                 print(f"{Fore.RED}Exception occurred: {e}{Style.RESET_ALL}")
@@ -297,14 +375,25 @@ Options:
     def extract_email_addresses(self):
         if self.ensure_target_set():
             try:
-                target = Target(self.target)
-                emails, success = target.Extract_Emails()
-                if success:
-                    logging.info("Extracted email addresses successfully.")
-                    print(f"{Fore.GREEN}{emails}{Style.RESET_ALL}")
+                if isinstance(self.targets, list):  # Check if multiple targets are set
+                    for target_url in self.targets:
+                        target = Target(target_url)
+                        emails, success = target.Extract_Emails()
+                        if success:
+                            logging.info(f"Extracted email addresses from {target_url} successfully.")
+                            print(f"{Fore.GREEN}{emails}{Style.RESET_ALL}")
+                        else:
+                            logging.error(f"Failed to extract email addresses from {target_url}: {emails}")
+                            print(f"{Fore.RED}Error extracting email addresses from {target_url}: {emails}{Style.RESET_ALL}")
                 else:
-                    logging.error(f"Failed to extract email addresses: {emails}")
-                    print(f"{Fore.RED}Error extracting email addresses: {emails}{Style.RESET_ALL}")
+                    target = Target(self.target)
+                    emails, success = target.Extract_Emails()
+                    if success:
+                        logging.info("Extracted email addresses successfully.")
+                        print(f"{Fore.GREEN}{emails}{Style.RESET_ALL}")
+                    else:
+                        logging.error(f"Failed to extract email addresses: {emails}")
+                        print(f"{Fore.RED}Error extracting email addresses: {emails}{Style.RESET_ALL}")
             except Exception as e:
                 logging.error(f"Exception occurred while extracting email addresses: {e}")
                 print(f"{Fore.RED}Exception occurred: {e}{Style.RESET_ALL}")
@@ -312,29 +401,51 @@ Options:
     def extract_robots_txt(self):
         if self.ensure_target_set():
             try:
-                target = Target(self.target)
-                content, status_code, success = target.Extract_Robots()
-                if success:
-                    logging.info("Extracted robots.txt content successfully.")
-                    print(f"{Fore.GREEN}{content}{Style.RESET_ALL}")
+                if isinstance(self.targets, list):  # Check if multiple targets are set
+                    for target_url in self.targets:
+                        target = Target(target_url)
+                        content, status_code, success = target.Extract_Robots()
+                        if success:
+                            logging.info(f"Extracted robots.txt content from {target_url} successfully.")
+                            print(f"{Fore.GREEN}{content}{Style.RESET_ALL}")
+                        else:
+                            logging.error(f"Failed to extract robots.txt content from {target_url}: {content}")
+                            print(f"{Fore.RED}Error extracting robots.txt content from {target_url}: {content}{Style.RESET_ALL}")
                 else:
-                    logging.error(f"Failed to extract robots.txt: {content}")
-                    print(f"{Fore.RED}Error extracting robots.txt: {content}{Style.RESET_ALL}")
+                    target = Target(self.target)
+                    content, status_code, success = target.Extract_Robots()
+                    if success:
+                        logging.info("Extracted robots.txt content successfully.")
+                        print(f"{Fore.GREEN}{content}{Style.RESET_ALL}")
+                    else:
+                        logging.error(f"Failed to extract robots.txt content: {content}")
+                        print(f"{Fore.RED}Error extracting robots.txt content: {content}{Style.RESET_ALL}")
             except Exception as e:
-                logging.error(f"Exception occurred while extracting robots.txt: {e}")
+                logging.error(f"Exception occurred while extracting robots.txt content: {e}")
                 print(f"{Fore.RED}Exception occurred: {e}{Style.RESET_ALL}")
 
     def extract_urls_from_sitemap(self):
         if self.ensure_target_set():
             try:
-                target = Target(self.target)
-                urls, status_code, success = target.Extract_Sitemap()
-                if success:
-                    logging.info("Extracted URLs from sitemap.xml successfully.")
-                    print(f"{Fore.GREEN}{urls}{Style.RESET_ALL}")
+                if isinstance(self.targets, list):  # Check if multiple targets are set
+                    for target_url in self.targets:
+                        target = Target(target_url)
+                        urls, status_code, success = target.Extract_Sitemap()
+                        if success:
+                            logging.info(f"Extracted URLs from sitemap.xml at {target_url} successfully.")
+                            print(f"{Fore.GREEN}{urls}{Style.RESET_ALL}")
+                        else:
+                            logging.error(f"Failed to extract URLs from sitemap.xml at {target_url}: {urls}")
+                            print(f"{Fore.RED}Error extracting URLs from sitemap.xml at {target_url}: {urls}{Style.RESET_ALL}")
                 else:
-                    logging.error(f"Failed to extract URLs from sitemap.xml: {urls}")
-                    print(f"{Fore.RED}Error extracting URLs from sitemap.xml: {urls}{Style.RESET_ALL}")
+                    target = Target(self.target)
+                    urls, status_code, success = target.Extract_Sitemap()
+                    if success:
+                        logging.info("Extracted URLs from sitemap.xml successfully.")
+                        print(f"{Fore.GREEN}{urls}{Style.RESET_ALL}")
+                    else:
+                        logging.error(f"Failed to extract URLs from sitemap.xml: {urls}")
+                        print(f"{Fore.RED}Error extracting URLs from sitemap.xml: {urls}{Style.RESET_ALL}")
             except Exception as e:
                 logging.error(f"Exception occurred while extracting URLs from sitemap.xml: {e}")
                 print(f"{Fore.RED}Exception occurred: {e}{Style.RESET_ALL}")
@@ -342,14 +453,25 @@ Options:
     def extract_urls_from_xml(self):
         if self.ensure_target_set():
             try:
-                target = Target(self.target)
-                urls, status_code, success = target.Extract_XML_URLS()
-                if success:
-                    logging.info("Extracted URLs from XML content successfully.")
-                    print(f"{Fore.GREEN}{urls}{Style.RESET_ALL}")
+                if isinstance(self.targets, list):  # Check if multiple targets are set
+                    for target_url in self.targets:
+                        target = Target(target_url)
+                        urls, status_code, success = target.Extract_XML_URLS()
+                        if success:
+                            logging.info(f"Extracted URLs from XML content at {target_url} successfully.")
+                            print(f"{Fore.GREEN}{urls}{Style.RESET_ALL}")
+                        else:
+                            logging.error(f"Failed to extract URLs from XML content at {target_url}: {urls}")
+                            print(f"{Fore.RED}Error extracting URLs from XML content at {target_url}: {urls}{Style.RESET_ALL}")
                 else:
-                    logging.error(f"Failed to extract URLs from XML content: {urls}")
-                    print(f"{Fore.RED}Error extracting URLs from XML content: {urls}{Style.RESET_ALL}")
+                    target = Target(self.target)
+                    urls, status_code, success = target.Extract_XML_URLS()
+                    if success:
+                        logging.info("Extracted URLs from XML content successfully.")
+                        print(f"{Fore.GREEN}{urls}{Style.RESET_ALL}")
+                    else:
+                        logging.error(f"Failed to extract URLs from XML content: {urls}")
+                        print(f"{Fore.RED}Error extracting URLs from XML content: {urls}{Style.RESET_ALL}")
             except Exception as e:
                 logging.error(f"Exception occurred while extracting URLs from XML content: {e}")
                 print(f"{Fore.RED}Exception occurred: {e}{Style.RESET_ALL}")
@@ -357,14 +479,25 @@ Options:
     def extract_wp_login_form_params(self):
         if self.ensure_target_set():
             try:
-                target = Target(self.target)
-                form_params, status_code, success = target.Extract_WPLOGIN()
-                if success:
-                    logging.info("Extracted WordPress login form parameters successfully.")
-                    print(f"{Fore.GREEN}{form_params}{Style.RESET_ALL}")
+                if isinstance(self.targets, list):  # Check if multiple targets are set
+                    for target_url in self.targets:
+                        target = Target(target_url)
+                        form_params, status_code, success = target.Extract_WPLOGIN()
+                        if success:
+                            logging.info(f"Extracted WordPress login form parameters from {target_url} successfully.")
+                            print(f"{Fore.GREEN}{form_params}{Style.RESET_ALL}")
+                        else:
+                            logging.error(f"Failed to extract WordPress login form parameters from {target_url}: {form_params}")
+                            print(f"{Fore.RED}Error extracting WordPress login form parameters from {target_url}: {form_params}{Style.RESET_ALL}")
                 else:
-                    logging.error(f"Failed to extract WordPress login form parameters: {form_params}")
-                    print(f"{Fore.RED}Error extracting WordPress login form parameters: {form_params}{Style.RESET_ALL}")
+                    target = Target(self.target)
+                    form_params, status_code, success = target.Extract_WPLOGIN()
+                    if success:
+                        logging.info("Extracted WordPress login form parameters successfully.")
+                        print(f"{Fore.GREEN}{form_params}{Style.RESET_ALL}")
+                    else:
+                        logging.error(f"Failed to extract WordPress login form parameters: {form_params}")
+                        print(f"{Fore.RED}Error extracting WordPress login form parameters: {form_params}{Style.RESET_ALL}")
             except Exception as e:
                 logging.error(f"Exception occurred while extracting WordPress login form parameters: {e}")
                 print(f"{Fore.RED}Exception occurred: {e}{Style.RESET_ALL}")
