@@ -104,6 +104,7 @@ Options:
         
 """     
         self.target = None
+        self.targets = []
         self.menu = f"""{Fore.MAGENTA}
 # Select an option:
 
@@ -116,7 +117,7 @@ Options:
 {Fore.LIGHTMAGENTA_EX}[7] Extract URLs from XML (Sitemap Schema){Fore.RESET}
 {Fore.LIGHTMAGENTA_EX}[8] Extract WordPress Login Form Params{Fore.RESET}
 
-{Fore.CYAN}[S] Set target (URL) [{self.target}]{Fore.RESET}
+{Fore.CYAN}[S] Set target (URL or File Path) [{self.target}]{Fore.RESET}
 {Fore.CYAN}[X] Print target HTML Source{Fore.RESET}
 {Fore.CYAN}[M] Menu{Fore.RESET}
 {Fore.CYAN}[C] Clear{Fore.RESET}
