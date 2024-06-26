@@ -303,19 +303,19 @@ Options:
         :return: Tuple containing the filename and file format.
         """
         while True:
-            filename = input("Enter the filename (with extension): ").strip()
+            filename = input(f"{Fore.CYAN}Enter the filename (with extension): {Style.RESET_ALL}").strip()
             if not filename:
-                print("Filename cannot be empty. Please try again.")
+                print(f"{Fore.RED}Filename cannot be empty. Please try again.{Style.RESET_ALL}")
                 continue
             if not os.path.splitext(filename)[1]:
-                print("Filename must include an extension (e.g., .txt, .json). Please try again.")
+                print(f"{Fore.RED}Filename must include an extension (e.g., .txt, .json). Please try again.{Style.RESET_ALL}")
                 continue
             break
 
         while True:
-            file_format = input("Enter the file format (text, json, binary): ").strip().lower()
+            file_format = input(f"{Fore.CYAN}Enter the file format (text, json, binary): {Style.RESET_ALL}").strip().lower()
             if file_format not in ['text', 'json', 'binary']:
-                print("Invalid file format. Please enter 'text', 'json', or 'binary'.")
+                print(f"{Fore.RED}Invalid file format. Please enter 'text', 'json', or 'binary'.{Style.RESET_ALL}")
                 continue
             break
 
@@ -344,7 +344,7 @@ Options:
                 with open(filename, mode + 'b') as file:
                     file.write(data)
             else:
-                raise ValueError("Unsupported file format specified.")
+                raise ValueError(f"{Fore.RED}Unsupported file format specified.{Style.RESET_ALL}")
 
             logging.info(f"Data successfully written to {filename}")
             return True
@@ -359,7 +359,7 @@ Options:
         
         :param data: Data to be stored in the file.
         """
-        save_response = input("Do you want to save the output to a file? (yes/no): ").strip().lower()
+        save_response = input(f"{Fore.CYAN}Do you want to save the output to a file? (yes/no): {Style.RESET_ALL}").strip().lower()
         if save_response in ['yes', 'y']:
             return True
         else:
