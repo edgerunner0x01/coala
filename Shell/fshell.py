@@ -5,6 +5,7 @@ import sys
 import os
 import json
 from json import * 
+from typing import Any
 from random import randint
 from colorama import init, Fore, Back, Style
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'module_to_import')))
@@ -294,6 +295,76 @@ Options:
         print(f"{Fore.GREEN}Exiting the program.{Style.RESET_ALL}")
         exit()
 
+######################################################################################################################################################
+    def get_user_input(self):
+        """
+        Prompts the user for the filename and file format, ensuring they are valid.
+        
+        :return: Tuple containing the filename and file format.
+        """
+        while True:
+            filename = input("Enter the filename (with extension): ").strip()
+            if not filename:
+                print("Filename cannot be empty. Please try again.")
+                continue
+            if not os.path.splitext(filename)[1]:
+                print("Filename must include an extension (e.g., .txt, .json). Please try again.")
+                continue
+            break
+
+        while True:
+            file_format = input("Enter the file format (text, json, binary): ").strip().lower()
+            if file_format not in ['text', 'json', 'binary']:
+                print("Invalid file format. Please enter 'text', 'json', or 'binary'.")
+                continue
+            break
+
+        return filename, file_format
+
+    def write_to_file(self,filename: str, data: Any,  file_format: str = 'text') -> bool:
+        """
+        Writes data to a file with specified format and mode.
+
+        :param filename: Name of the file to write to.
+        :param data: Data to be written to the file.
+        :param mode: Mode in which to open the file ('w' for writing, 'a' for appending, etc.).
+        :param file_format: Format of the file ('text', 'json', 'binary').
+        :return: True if the writing is successful, False otherwise.
+        """
+        mode :str="a+"
+        try:
+            if file_format == 'text':
+                with open(filename, mode, encoding='utf-8') as file:
+                    for i in data:
+                        file.write(str(i).rstrip()+"\n")
+            elif file_format == 'json':
+                with open(filename, mode, encoding='utf-8') as file:
+                    json.dump(data, file, ensure_ascii=False, indent=4)
+            elif file_format == 'binary':
+                with open(filename, mode + 'b') as file:
+                    file.write(data)
+            else:
+                raise ValueError("Unsupported file format specified.")
+
+            logging.info(f"Data successfully written to {filename}")
+            return True
+
+        except Exception as e:
+            logging.error(f"Failed to write to {filename}: {e}")
+            return False
+        
+    def save(self):
+        """
+        Prompts the user if they want to save the data to a file.
+        
+        :param data: Data to be stored in the file.
+        """
+        save_response = input("Do you want to save the output to a file? (yes/no): ").strip().lower()
+        if save_response in ['yes', 'y']:
+            return True
+        else:
+            return False
+######################################################################################################################################################
     def Clear(self):
         try:
             os.system('cls' if os.name == 'nt' else 'clear')
@@ -365,6 +436,9 @@ Options:
         return True
 
     def extract_html_comments(self):
+        choice = self.save()
+        if choice:
+            filename, file_format = self.get_user_input()
         if self.ensure_target_set():
             try:
                 if isinstance(self.targets, list) and len(self.targets) > 0:  # Check if multiple targets are set
@@ -374,6 +448,9 @@ Options:
                         if success:
                             logging.info(f"Extracted HTML comments from {target_url} successfully.")
                             print(f"{Fore.GREEN}{comments}{Style.RESET_ALL}")
+                            if choice:
+                                self.write_to_file(filename, comments, file_format)
+
                         else:
                             logging.error(f"Failed to extract HTML comments from {target_url}: {comments}")
                             print(f"{Fore.RED}Error extracting HTML comments from {target_url}: {comments}{Style.RESET_ALL}")
@@ -383,6 +460,9 @@ Options:
                     if success:
                         logging.info("Extracted HTML comments successfully.")
                         print(f"{Fore.GREEN}{comments}{Style.RESET_ALL}")
+                        if choice:
+                            self.write_to_file(filename, comments, file_format)
+
                     else:
                         logging.error(f"Failed to extract HTML comments: {comments}")
                         print(f"{Fore.RED}Error extracting HTML comments: {comments}{Style.RESET_ALL}")
@@ -391,6 +471,9 @@ Options:
                 print(f"{Fore.RED}Exception occurred: {e}{Style.RESET_ALL}")
 
     def extract_meta_tags(self):
+        choice =self.save()
+        if choice:
+            filename, file_format = self.get_user_input()
         if self.ensure_target_set():
             try:
                 if isinstance(self.targets, list) and len(self.targets) > 0:  # Check if multiple targets are set
@@ -400,6 +483,8 @@ Options:
                         if success:
                             logging.info(f"Extracted meta tags from {target_url} successfully.")
                             print(f"{Fore.GREEN}{metadata}{Style.RESET_ALL}")
+                            if choice:
+                                self.write_to_file(filename, metadata, file_format)
                         else:
                             logging.error(f"Failed to extract meta tags from {target_url}: {metadata}")
                             print(f"{Fore.RED}Error extracting meta tags from {target_url}: {metadata}{Style.RESET_ALL}")
@@ -409,6 +494,8 @@ Options:
                     if success:
                         logging.info("Extracted meta tags successfully.")
                         print(f"{Fore.GREEN}{metadata}{Style.RESET_ALL}")
+                        if choice:
+                            self.write_to_file(filename, metadata, file_format)
                     else:
                         logging.error(f"Failed to extract meta tags: {metadata}")
                         print(f"{Fore.RED}Error extracting meta tags: {metadata}{Style.RESET_ALL}")
@@ -417,6 +504,10 @@ Options:
                 print(f"{Fore.RED}Exception occurred: {e}{Style.RESET_ALL}")
 
     def extract_source(self):
+        choice = self.save()
+        if choice:
+            filename, file_format = self.get_user_input()
+            print(filename)
         if self.ensure_target_set():
             try:
                 if isinstance(self.targets, list) and len(self.targets) > 0:  # Check if multiple targets are set
@@ -426,6 +517,10 @@ Options:
                             source = BeautifulSoup(target.source, 'html.parser').prettify()
                             logging.info(f"Extracted HTML Source from {target_url} successfully.")
                             print(f"{Fore.GREEN}{source}{Style.RESET_ALL}")
+                            
+                            if choice:
+                                self.write_to_file(filename, source, file_format)
+
                         else:
                             logging.error(f"Failed to extract HTML Source from {target_url}: HTTP Status {target.HTTP_STATUS}")
                             print(f"{Fore.RED}Error extracting HTML Source from {target_url}: HTTP Status {target.HTTP_STATUS}{Style.RESET_ALL}")
@@ -435,6 +530,9 @@ Options:
                         source = BeautifulSoup(target.source, 'html.parser').prettify()
                         logging.info("Extracted HTML Source successfully.")
                         print(f"{Fore.GREEN}{source}{Style.RESET_ALL}")
+                        if choice:
+                            self.write_to_file(filename, source, file_format)
+
                     else:
                         logging.error(f"Failed to extract HTML Source: HTTP Status {target.HTTP_STATUS}")
                         print(f"{Fore.RED}Error extracting HTML Source: HTTP Status {target.HTTP_STATUS}{Style.RESET_ALL}")
@@ -443,6 +541,9 @@ Options:
                 print(f"{Fore.RED}Exception occurred: {e}{Style.RESET_ALL}")
 
     def extract_urls(self):
+        choice = self.save()
+        if choice :
+            filename, file_format = self.get_user_input()
         if self.ensure_target_set():
             try:
                 if isinstance(self.targets, list) and len(self.targets) > 0:  # Check if multiple targets are set
@@ -452,6 +553,8 @@ Options:
                         if success:
                             logging.info(f"Extracted URLs from {target_url} successfully.")
                             print(f"{Fore.GREEN}{urls}{Style.RESET_ALL}")
+                            if choice:
+                                self.write_to_file(filename, urls, file_format)
                         else:
                             logging.error(f"Failed to extract URLs from {target_url}: {urls}")
                             print(f"{Fore.RED}Error extracting URLs from {target_url}: {urls}{Style.RESET_ALL}")
@@ -461,6 +564,8 @@ Options:
                     if success:
                         logging.info("Extracted URLs successfully.")
                         print(f"{Fore.GREEN}{urls}{Style.RESET_ALL}")
+                        if choice:
+                            self.write_to_file(filename, urls, file_format)
                     else:
                         logging.error(f"Failed to extract URLs: {urls}")
                         print(f"{Fore.RED}Error extracting URLs: {urls}{Style.RESET_ALL}")
@@ -469,6 +574,9 @@ Options:
                 print(f"{Fore.RED}Exception occurred: {e}{Style.RESET_ALL}")
 
     def extract_email_addresses(self):
+        choice = self.save()
+        if choice :
+            filename, file_format = self.get_user_input()
         if self.ensure_target_set():
             try:
                 if isinstance(self.targets, list) and len(self.targets) > 0:  # Check if multiple targets are set
@@ -478,6 +586,8 @@ Options:
                         if success:
                             logging.info(f"Extracted email addresses from {target_url} successfully.")
                             print(f"{Fore.GREEN}{emails}{Style.RESET_ALL}")
+                            if choice:
+                                self.write_to_file(filename, emails, file_format)
                         else:
                             logging.error(f"Failed to extract email addresses from {target_url}: {emails}")
                             print(f"{Fore.RED}Error extracting email addresses from {target_url}: {emails}{Style.RESET_ALL}")
@@ -487,6 +597,8 @@ Options:
                     if success:
                         logging.info("Extracted email addresses successfully.")
                         print(f"{Fore.GREEN}{emails}{Style.RESET_ALL}")
+                        if choice:
+                            self.write_to_file(filename, emails, file_format)
                     else:
                         logging.error(f"Failed to extract email addresses: {emails}")
                         print(f"{Fore.RED}Error extracting email addresses: {emails}{Style.RESET_ALL}")
@@ -495,6 +607,9 @@ Options:
                 print(f"{Fore.RED}Exception occurred: {e}{Style.RESET_ALL}")
 
     def extract_robots_txt(self):
+        choice = self.save()
+        if choice:
+            filename, file_format = self.get_user_input()
         if self.ensure_target_set():
             try:
                 if isinstance(self.targets, list) and len(self.targets) > 0:  # Check if multiple targets are set
@@ -504,6 +619,8 @@ Options:
                         if success:
                             logging.info(f"Extracted robots.txt content from {target_url} successfully.")
                             print(f"{Fore.GREEN}{content}{Style.RESET_ALL}")
+                            if choice:
+                                self.write_to_file(filename, content, file_format)
                         else:
                             logging.error(f"Failed to extract robots.txt content from {target_url}: {content}")
                             print(f"{Fore.RED}Error extracting robots.txt content from {target_url}: {content}{Style.RESET_ALL}")
@@ -513,6 +630,8 @@ Options:
                     if success:
                         logging.info("Extracted robots.txt content successfully.")
                         print(f"{Fore.GREEN}{content}{Style.RESET_ALL}")
+                        if choice:
+                            self.write_to_file(filename, content, file_format)
                     else:
                         logging.error(f"Failed to extract robots.txt content: {content}")
                         print(f"{Fore.RED}Error extracting robots.txt content: {content}{Style.RESET_ALL}")
@@ -521,6 +640,9 @@ Options:
                 print(f"{Fore.RED}Exception occurred: {e}{Style.RESET_ALL}")
 
     def extract_urls_from_sitemap(self):
+        choice = self.save()
+        if choice:
+            filename, file_format = self.get_user_input()
         if self.ensure_target_set():
             try:
                 if isinstance(self.targets, list) and len(self.targets) > 0:  # Check if multiple targets are set
@@ -530,6 +652,8 @@ Options:
                         if success:
                             logging.info(f"Extracted URLs from sitemap.xml at {target_url} successfully.")
                             print(f"{Fore.GREEN}{urls}{Style.RESET_ALL}")
+                            if choice:
+                                self.write_to_file(filename, urls, file_format)
                         else:
                             logging.error(f"Failed to extract URLs from sitemap.xml at {target_url}: {urls}")
                             print(f"{Fore.RED}Error extracting URLs from sitemap.xml at {target_url}: {urls}{Style.RESET_ALL}")
@@ -539,6 +663,8 @@ Options:
                     if success:
                         logging.info("Extracted URLs from sitemap.xml successfully.")
                         print(f"{Fore.GREEN}{urls}{Style.RESET_ALL}")
+                        if choice:
+                            self.write_to_file(filename, urls, file_format)
                     else:
                         logging.error(f"Failed to extract URLs from sitemap.xml: {urls}")
                         print(f"{Fore.RED}Error extracting URLs from sitemap.xml: {urls}{Style.RESET_ALL}")
@@ -547,6 +673,9 @@ Options:
                 print(f"{Fore.RED}Exception occurred: {e}{Style.RESET_ALL}")
 
     def extract_urls_from_xml(self):
+        choice = self.save()
+        if choice:
+            filename, file_format = self.get_user_input()
         if self.ensure_target_set():
             try:
                 if isinstance(self.targets, list) and len(self.targets) > 0:  # Check if multiple targets are set
@@ -556,6 +685,8 @@ Options:
                         if success:
                             logging.info(f"Extracted URLs from XML content at {target_url} successfully.")
                             print(f"{Fore.GREEN}{urls}{Style.RESET_ALL}")
+                            if choice:
+                                self.write_to_file(filename, urls, file_format)
                         else:
                             logging.error(f"Failed to extract URLs from XML content at {target_url}: {urls}")
                             print(f"{Fore.RED}Error extracting URLs from XML content at {target_url}: {urls}{Style.RESET_ALL}")
@@ -565,6 +696,8 @@ Options:
                     if success:
                         logging.info("Extracted URLs from XML content successfully.")
                         print(f"{Fore.GREEN}{urls}{Style.RESET_ALL}")
+                        if choice:
+                            self.write_to_file(filename, urls, file_format)
                     else:
                         logging.error(f"Failed to extract URLs from XML content: {urls}")
                         print(f"{Fore.RED}Error extracting URLs from XML content: {urls}{Style.RESET_ALL}")
@@ -573,6 +706,9 @@ Options:
                 print(f"{Fore.RED}Exception occurred: {e}{Style.RESET_ALL}")
 
     def extract_wp_login_form_params(self):
+        choice = self.save()
+        if choice :
+            filename, file_format = self.get_user_input()
         if self.ensure_target_set():
             try:
                 if isinstance(self.targets, list) and len(self.targets) > 0:  # Check if multiple targets are set
@@ -582,6 +718,8 @@ Options:
                         if success:
                             logging.info(f"Extracted WordPress login form parameters from {target_url} successfully.")
                             print(f"{Fore.GREEN}{form_params}{Style.RESET_ALL}")
+                            if choice:
+                                self.write_to_file(filename, form_params, file_format)
                         else:
                             logging.error(f"Failed to extract WordPress login form parameters from {target_url}: {form_params}")
                             print(f"{Fore.RED}Error extracting WordPress login form parameters from {target_url}: {form_params}{Style.RESET_ALL}")
@@ -591,6 +729,8 @@ Options:
                     if success:
                         logging.info("Extracted WordPress login form parameters successfully.")
                         print(f"{Fore.GREEN}{form_params}{Style.RESET_ALL}")
+                        if choice:
+                            self.write_to_file(filename, form_params, file_format)
                     else:
                         logging.error(f"Failed to extract WordPress login form parameters: {form_params}")
                         print(f"{Fore.RED}Error extracting WordPress login form parameters: {form_params}{Style.RESET_ALL}")
